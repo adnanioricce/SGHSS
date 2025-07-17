@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    dockerfile: docker/Api.Dockerfile
+    container_name: sghss_app
+    ports:
+      - "8000:80"
+    volumes:
+      - ./volumes/app:/app
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=localhost;Database=sghss;Username=postgres;Password=senha;Port=5432
+    depends_on:
+      - db
+  db:
+    build: .
+    dockerfile: docker/Db.Dockerfile
+    container_name: sghss_db
+    ports:
+      - "5532:5432"
+    volumes:
+      - ./volumes/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=senha
+      - POSTGRES_DB=sghss
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

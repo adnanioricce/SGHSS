@@ -15,7 +15,8 @@ spec:
     spec:
       containers:
         - name: sghss-api
-          image: registry.local/vida/sg-hss:latest
+          image: registry.poderiaserseudominio.uk/adnangonzaga/sghss-api:${TAG:-latest}
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
           env:

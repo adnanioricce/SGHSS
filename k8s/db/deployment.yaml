@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sghss-db
+  namespace: sghss
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sghss-db
+  template:
+    metadata:
+      labels:
+        app: sghss-db
+    spec:
+      containers:
+        - name: sghss-db
+          image: registry.poderiaserseudominio.uk/adnangonzaga/sghss-db:${TAG:-latest}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: senha
+            - name: POSTGRES_DB
+              value: sghss
