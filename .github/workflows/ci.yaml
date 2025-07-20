@@ -36,6 +36,14 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/sghss-db:${{ github.sha }}
           file: docker/Db.Dockerfile
+      - name: Run Jenkins pipeline
+        env:
+          JENKINS_URL: ${{ secrets.JENKINS_URL }}
+          JENKINS_TOKEN_NAME: ${{ secrets.JENKINS_TOKEN_NAME }}
+          JENKINS_TOKEN: ${{ secrets.JENKINS_TOKEN }}
+        run: |
+          echo "Running Jenkins pipeline..."
+          curl -X POST  https://jenkins.adnangonzaga.com/job/SGHSS_Api/build?token=${{ env.JENKINS_TOKEN }}
       # - name: Set up Kubernetes credentials
       #   uses: azure/setup-kubectl@v1
       #   with:

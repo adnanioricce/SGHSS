@@ -15,14 +15,36 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build Api Docker Image') {
             steps {
                 script {
-                    docker.build("${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}")
+                    // Build a docker image using the Dockerfile in docker/Api.Dockerfile
+                    def dockerFile = 'docker/Api.Dockerfile'
+                    docker.build("${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}", "-f ${dockerFile} .")
+                    // Alternatively, if you want to use the default Dockerfile in the root directory
+                    // docker.build("${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}")
                 }
             }
         }
-
+        stage('Build Database Docker Image') {
+            steps {
+                script {
+                    // Build a docker image for the database
+                    def dbDockerFile = 'docker/Db.Dockerfile'
+                    docker.build("${REGISTRY}/sghss-db:${IMAGE_TAG}", "-f ${dbDockerFile} .")
+                }
+            }
+        }
+        // stage('Run Tests') {
+        //     steps {
+        //         script {
+        //             // Run tests inside the Docker container
+        //             docker.image("${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}").inside {
+        //                 sh 'dotnet test --no-build --verbosity normal'
+        //             }
+        //         }
+        //     }
+        // }
         stage('Push Docker Image') {
             steps {
                 script {

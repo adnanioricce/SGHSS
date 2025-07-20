@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sghss-ingress
+  namespace: sghss
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"    
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - sghss.adnangonzaga.com
+      secretName: sghss-tls
+  rules:
+    - host: sghss.adnangonzaga.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: sghss-service
+                port:
+                  number: 80
