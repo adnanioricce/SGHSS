@@ -55,28 +55,28 @@ pipeline {
             }
         }
         //TODO: Uncomment and configure the following stages for deployment to Kubernetes
-        // stage('Deploy to Kubernetes') {
-        //     steps {
-        //         withCredentials([file(credentialsId: 'kubeconfig-credentials-id', variable: 'KUBECONFIG')]) {
-        //             sh '''
-        //                 kubectl apply -f k8s/db/deployment.yaml --kubeconfig=$KUBECONFIG
-        //                 kubectl apply -f k8s/db/service.yaml --kubeconfig=$KUBECONFIG
-        //                 kubectl rollout status deployment/sghss-db --kubeconfig=$KUBECONFIG
-        //             '''
-        //         }
-        //     }
-        // }
-        // stage('Deploy API') {
-        //     steps {
-        //         withCredentials([file(credentialsId: 'kubeconfig-credentials-id', variable: 'KUBECONFIG')]) {
-        //             sh '''
-        //                 kubectl apply -f k8s/api/deployment.yaml --kubeconfig=$KUBECONFIG
-        //                 kubectl apply -f k8s/api/service.yaml --kubeconfig=$KUBECONFIG
-        //                 kubectl rollout status deployment/sghss-api --kubeconfig=$KUBECONFIG
-        //             '''
-        //         }
-        //     }
-        // }
+        stage('Deploy database changes to k8s cluster') {
+          steps {
+            withCredentials([file(credentialsId: 'kubeconfig-credentials-id', variable: 'KUBECONFIG')]) {
+              sh '''
+                kubectl apply -f k8s/db/deployment.yaml --kubeconfig=$KUBECONFIG
+                kubectl apply -f k8s/db/service.yaml --kubeconfig=$KUBECONFIG
+                kubectl rollout status deployment/sghss-db --kubeconfig=$KUBECONFIG
+              '''
+            }
+          }
+        }
+        stage('Deploy API') {
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig-credentials-id', variable: 'KUBECONFIG')]) {
+                    sh '''
+                        kubectl apply -f k8s/api/deployment.yaml --kubeconfig=$KUBECONFIG
+                        kubectl apply -f k8s/api/service.yaml --kubeconfig=$KUBECONFIG
+                        kubectl rollout status deployment/sghss-api --kubeconfig=$KUBECONFIG
+                    '''
+                }
+            }
+        }
         
         // stage('Deploy to Kubernetes') {
         //     steps {
