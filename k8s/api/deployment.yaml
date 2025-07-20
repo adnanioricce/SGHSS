@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: sghss-api
-          image: registry.poderiaserseudominio.uk/adnangonzaga/sghss-api:${TAG:-latest}
+          image: registry.poderiaserseudominio.uk/adnangonzaga/sghss-api:%TAG%
           imagePullPolicy: Always
           ports:
             - containerPort: 80

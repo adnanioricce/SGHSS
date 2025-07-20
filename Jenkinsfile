@@ -6,7 +6,7 @@ pipeline {
         IMAGE_NAME = 'sghss-api'
         IMAGE_TAG = "$GIT_COMMIT"
         //KUBE_CONFIG = credentials('kubeconfig-credentials-id')
-        KUBE_CONFIG = '/etc/rancher/k3s/k3s.yaml'
+        KUBE_CONFIG = '/home/dev/.kube/jenkins.config'
     }
 
     stages {
@@ -61,8 +61,9 @@ pipeline {
             //withCredentials([file(credentialsId: 'kubeconfig-credentials-id', variable: 'KUBECONFIG')]) {
               sh '''
                 KUBECONFIG=/home/dev/.kube/jenkins.config
-                # Replace the ${TAG-latest} with the IMAGE_TAG generated on the pipeline
-                sed -i "s/\${TAG-latest}/${IMAGE_TAG}/g" k8s/db/deployment.yaml
+                IMAGE_TAG=${IMAGE_TAG}
+                # Replace the %TAG% with the IMAGE_TAG generated on the pipeline
+                sed -i "s/%TAG%/$IMAGE_TAG/g" k8s/db/deployment.yaml
                 kubectl apply -f k8s/db/deployment.yaml --kubeconfig=$KUBECONFIG
                 kubectl apply -f k8s/db/service.yaml --kubeconfig=$KUBECONFIG
                 kubectl rollout status deployment/sghss-db --timeout=30s -n sghss --kubeconfig=$KUBECONFIG
@@ -70,12 +71,14 @@ pipeline {
             //}
           }
         }
-        stage('Deploy API') {
+        stage('Deploy Api changes to k8s cluster') {
             steps {
                 //withCredentials([file(credentialsId: 'kubeconfig-credentials-id', variable: 'KUBECONFIG')]) {
                     sh '''
                         KUBECONFIG=/home/dev/.kube/jenkins.config
-                        sed -i "s/\${TAG-latest}/${IMAGE_TAG}/g" k8s/api/deployment.yaml
+                        IMAGE_TAG=${IMAGE_TAG}
+                        # Replace the %TAG% with the IMAGE_TAG generated on the pipeline
+                        sed -i "s/%TAG%/$IMAGE_TAG/g" k8s/api/deployment.yaml
                         kubectl apply -f k8s/api/deployment.yaml --kubeconfig=$KUBECONFIG
                         kubectl apply -f k8s/api/service.yaml --kubeconfig=$KUBECONFIG
                         kubectl apply -f k8s/api/ingress.yaml --kubeconfig=$KUBECONFIG

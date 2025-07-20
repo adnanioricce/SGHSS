@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: sghss-db
-          image: registry.poderiaserseudominio.uk/adnangonzaga/sghss-db:${TAG:-latest}
+          image: registry.poderiaserseudominio.uk/adnangonzaga/sghss-db:%TAG%
           imagePullPolicy: Always
           ports:
             - containerPort: 5432
