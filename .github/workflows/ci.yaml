@@ -43,7 +43,7 @@ jobs:
           JENKINS_TOKEN: ${{ secrets.JENKINS_TOKEN }}
         run: |
           echo "Running Jenkins pipeline..."
-          curl -X POST  https://${{ secrets.JENKINS_URL }}/job/SGHSS_Api/build?token=${{ env.JENKINS_TOKEN }} --user "${{ secrets.JENKINS_USER }}:${{ env.JENKINS_TOKEN }}"
+          curl -X POST  ${{ secrets.JENKINS_URL }}/job/SGHSS_Api/build?token=${{ env.JENKINS_TOKEN }} --user "${{ secrets.JENKINS_USER }}:${{ env.JENKINS_TOKEN }}"
       # - name: Set up Kubernetes credentials
       #   uses: azure/setup-kubectl@v1
       #   with:
