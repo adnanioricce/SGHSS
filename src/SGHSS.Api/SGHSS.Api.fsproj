@@ -9,10 +9,20 @@
   <ItemGroup>
     <PackageReference Include="Giraffe" Version="6.4.0" />
     <PackageReference Include="Giraffe.ViewEngine" Version="1.4.*" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.19" />
     <PackageReference Include="Npgsql" Version="9.0.3" />
     <PackageReference Include="Npgsql.FSharp" Version="8.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="appsettings.Development.json" />
+    <Compile Include="Logging\AuditLogger.fs" />
+    <Compile Include="Security\Authentication.fs" />
+    <Compile Include="Database\DbContext.fs" />
+    <Compile Include="Domains\Administracao.fs" />
+    <Compile Include="Domains\Telemedicina.fs" />
+    <Compile Include="Domains\Prontuario.fs" />
+    <Compile Include="Domains\Agendamento.fs" />
+    <Compile Include="Domains\Profissional.fs" />
     <Compile Include="Domains/Paciente.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
@@ -22,4 +32,5 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
 </Project>
