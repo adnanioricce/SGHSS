@@ -1,4 +1,4 @@
-﻿namespace Domains.Profissional
+﻿namespace Domains.Prontuario
 
 open System
 
