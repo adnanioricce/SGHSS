@@ -27,16 +27,16 @@ let webApp =
                 subRoute "/pacientes" Domains.Paciente.Handler.routes
                 
                 // Profissionais
-                //subRoute "/profissionais" Domains.Profissional.Handler.routes
+                subRoute "/profissionais" Domains.Profissional.Handler.routes
                 
                 //// Agendamentos
-                //subRoute "/agendamentos" Domains.Agendamento.Handler.routes
+                subRoute "/agendamentos" Domains.Agendamento.Handler.routes
                 
                 //// Prontuários
-                //subRoute "/prontuarios" Domains.Prontuario.Handler.routes
+                subRoute "/prontuarios" Domains.Prontuario.Handler.routes
                 
                 //// Telemedicina
-                //subRoute "/telemedicina" Domains.Telemedicina.Handler.routes
+                subRoute "/telemedicina" Domains.Telemedicina.Handler.routes
                 
                 //// Administração
                 //subRoute "/admin" Domains.Administracao.Handler.routes
