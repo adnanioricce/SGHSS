@@ -39,7 +39,7 @@ let webApp =
                 subRoute "/telemedicina" Domains.Telemedicina.Handler.routes
                 
                 //// Administração
-                //subRoute "/admin" Domains.Administracao.Handler.routes
+                subRoute "/admin" Domains.Administracao.Handler.routes
                 
                 //// Relatórios
                 //subRoute "/relatorios" Domains.Relatorios.Handler.routes
