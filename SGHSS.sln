@@ -7,6 +7,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C34FB519-9A9
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SGHSS.Api", "src\SGHSS.Api\SGHSS.Api.fsproj", "{9CDDB245-E643-4A02-B764-65D77F1DABE9}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SGHSS.Api.IntegrationTests", "src\SGHSS.Api.IntegrationTests\SGHSS.Api.IntegrationTests.fsproj", "{7293CD16-3F82-4BF2-954D-8702E06DB14B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,8 +22,13 @@ Global
 		{9CDDB245-E643-4A02-B764-65D77F1DABE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9CDDB245-E643-4A02-B764-65D77F1DABE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9CDDB245-E643-4A02-B764-65D77F1DABE9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7293CD16-3F82-4BF2-954D-8702E06DB14B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7293CD16-3F82-4BF2-954D-8702E06DB14B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7293CD16-3F82-4BF2-954D-8702E06DB14B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7293CD16-3F82-4BF2-954D-8702E06DB14B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{9CDDB245-E643-4A02-B764-65D77F1DABE9} = {C34FB519-9A92-4BDB-864C-41609B51A104}
+		{7293CD16-3F82-4BF2-954D-8702E06DB14B} = {C34FB519-9A92-4BDB-864C-41609B51A104}
 	EndGlobalSection
 EndGlobal
