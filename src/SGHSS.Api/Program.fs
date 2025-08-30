@@ -13,6 +13,13 @@ open Microsoft.Extensions.Configuration
 open Microsoft.AspNetCore.Authentication.JwtBearer
 open Microsoft.IdentityModel.Tokens
 open System.Text
+// open Microsoft.OpenApi.Models
+open Microsoft.AspNetCore.Builder
+open Microsoft.Extensions.DependencyInjection
+open NSwag
+open NSwag.Generation.Processors.Security
+open NSwag.Annotations
+open Giraffe
 //open Microsoft.AspNetCore.Authentication.JwtBearer
 
 
@@ -63,6 +70,19 @@ let configureJwt (services: IServiceCollection) =
                         ClockSkew = TimeSpan.Zero
                     )
             ) |> ignore
+let configureSwagger (services: IServiceCollection) =
+    services.AddEndpointsApiExplorer() |> ignore
+    // NSwag setup
+    services.AddOpenApiDocument(fun settings ->
+        settings.Title <- "SGHSS API"
+        settings.Version <- "v1"
+    ) |> ignore
+    // services.AddSwaggerGen(fun c ->
+    //     c.SwaggerDoc("v1", OpenApiInfo(
+    //         Title = "My Giraffe API",
+    //         Version = "v1"
+    //     ))
+    // ) |> ignore
 // ---------------------------------
 // Error handler
 // ---------------------------------
@@ -88,9 +108,14 @@ let configureCors (configuration:IConfiguration) =
 
 let configureApp (app : IApplicationBuilder) =
     let env = app.ApplicationServices.GetService<IWebHostEnvironment>()
+    // app.UseSwagger() |> ignore
+    // app.UseSwaggerUI(fun c -> c.SwaggerEndpoint("/swagger/v1/swagger.json", "SGHSS Api v1")) |> ignore
+    app.UseOpenApi() |> ignore              // Serves /swagger/v1/swagger.json
+    app.UseSwaggerUi() |> ignore           // Serves Swagger UI at /swagger
     (match env.IsDevelopment() with
     | true  ->
         app.UseDeveloperExceptionPage()
+        
     | false ->
         app .UseGiraffeErrorHandler(errorHandler)
             .UseHttpsRedirection())
@@ -103,6 +128,7 @@ let configureServices (services : IServiceCollection) =
     services.AddGiraffe() |> ignore
     services.AddLogging() |> ignore
     configureJwt services |> ignore
+    configureSwagger services |> ignore
 
 let configureLogging (builder : ILoggingBuilder) =
     builder.AddConsole()

@@ -12,9 +12,14 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.19" />
     <PackageReference Include="Npgsql" Version="9.0.3" />
     <PackageReference Include="Npgsql.FSharp" Version="8.0.0" />
+    <PackageReference Include="NSwag.Annotations" Version="14.5.0" />
+    <PackageReference Include="NSwag.AspNetCore" Version="14.5.0" />
+<!--    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4" />-->
   </ItemGroup>
   <ItemGroup>
-    <Content Include="appsettings.Development.json" />
+    <Content Include="appsettings.Development.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Compile Include="Logging\AuditLogger.fs" />
     <Compile Include="Security\Authentication.fs" />
     <Compile Include="Database\DbContext.fs" />
@@ -34,5 +39,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Sql\0001_init.sql" />
+    <Content Include="appsettings.Production.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Folder Include="DSLs\" />
   </ItemGroup>
 </Project>

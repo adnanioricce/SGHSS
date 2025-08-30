@@ -1266,7 +1266,7 @@ module Handler =
                     return! (setStatusCode 500 >=> json errorResponse) next ctx
             }
 
-    // Rotas
+    // Rotas Prontuario
     let routes : HttpHandler =
         choose [
             GET >=> choose [
@@ -1287,19 +1287,3 @@ module Handler =
             ]
             DELETE >=> routef "/prescricoes/%i" inativarPrescricao
         ]
-
-// Database Schema Addition for Prontuarios
-//-- Adicionar à migration SQL:
-
-//-- Tabela principal de prontuários
-//CREATE TABLE IF NOT EXISTS prontuarios (
-//    id SERIAL PRIMARY KEY,
-//    paciente_id INTEGER REFERENCES pacientes(id) NOT NULL,
-//    profissional_id INTEGER REFERENCES profissionais(id) NOT NULL,
-//    data_atendimento TIMESTAMP NOT NULL,
-//    tipo_atendimento VARCHAR(20) NOT NULL CHECK (tipo_atendimento IN ('CONSULTA', 'EXAME', 'INTERNACAO', 'EMERGENCIA', 'TELECONSULTA')),
-//    queixa_principal TEXT NOT NULL,
-//    historia_doenca_atual TEXT NOT NULL,
-//    exame_fisico TEXT,
-//    hipoteses TEXT, -- Separadas por ;
-//    cid10 VARCHAR(10),

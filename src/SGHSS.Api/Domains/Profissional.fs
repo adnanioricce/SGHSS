@@ -2,6 +2,8 @@
 
 open System
 open Infrastructure.Database
+open NSwag
+open NSwag.Annotations
 
 module Models =
     type TipoProfissional = 
@@ -437,8 +439,8 @@ module Handler =
             errors.Add("Unidade deve ser especificada")
 
         errors |> Seq.toList
-
-    // Handlers
+    
+    [<OpenApiOperation("Get All Profissionals", Description = "Lista todos os profissionais")>]
     let getAllProfissionais : HttpHandler =
         fun next ctx ->
             task {
@@ -459,26 +461,24 @@ module Handler =
                     let errorResponse = {| error = "Erro interno do servidor"; details = ex.Message |}
                     return! (setStatusCode 500 >=> json errorResponse) next ctx
             }
-
-    //let getProfissionalById : HttpHandler =
-    //    fun next ctx ->
-    //        task {
-    //            try
-    //                let profissionalId = ctx.GetRouteValue("id") :?> string |> int
+    [<OpenApiOperation("Get Profissional Por Id", Description = "Consulta um profissional por Id")>]
+    let getProfissionalById profissionalId : HttpHandler =
+        fun next ctx ->
+            task {
+                try
+                    let! profissional = Repository.getById profissionalId
+                    let response = toResponse profissional
                     
-    //                let! profissional = Repository.getById profissionalId
-    //                let response = toResponse profissional
-                    
-    //                return! json response next ctx
-    //            with
-    //            | :? System.InvalidOperationException ->
-    //                let errorResponse = {| error = "Profissional não encontrado" |}
-    //                return! (setStatusCode 404 >=> json errorResponse) next ctx
-    //            | ex ->
-    //                let errorResponse = {| error = "Erro interno do servidor"; details = ex.Message |}
-    //                return! (setStatusCode 500 >=> json errorResponse) next ctx
-    //        }
-
+                    return! json response next ctx
+                with
+                | :? System.InvalidOperationException ->
+                    let errorResponse = {| error = "Profissional não encontrado" |}
+                    return! (setStatusCode 404 >=> json errorResponse) next ctx
+                | ex ->
+                    let errorResponse = {| error = "Erro interno do servidor"; details = ex.Message |}
+                    return! (setStatusCode 500 >=> json errorResponse) next ctx
+            }
+    [<OpenApiOperation("Create Profissional", Description = "Salva os dados de um profissional no sistema")>]
     let createProfissional : HttpHandler =
         fun next ctx ->
             task {
@@ -500,108 +500,102 @@ module Handler =
                     let errorResponse = {| error = "Erro ao criar profissional"; details = ex.Message |}
                     return! (setStatusCode 500 >=> json errorResponse) next ctx
             }
-
-    //let updateProfissional : HttpHandler =
-    //    fun next ctx ->
-    //        task {
-    //            try
-    //                let profissionalId = ctx.GetRouteValue("id") :?> string |> int
-    //                let! inputDto = ctx.BindJsonAsync<ProfissionalInputDto>()
+    [<OpenApiOperation("Update Profissional", Description = "Atualiza os dados de um profissional")>]
+    // [<OpenApiResponse(typeof<>, Description = "Echo result")>]
+    let updateProfissional profissionalId : HttpHandler =
+        fun next ctx ->
+            task {
+                try                    
+                    let! inputDto = ctx.BindJsonAsync<ProfissionalInputDto>()
                     
-    //                let validationErrors = validateInput inputDto
-    //                if not validationErrors.IsEmpty then
-    //                    let errorResponse = {| errors = validationErrors |}
-    //                    return! (setStatusCode 400 >=> json errorResponse) next ctx
-    //                else
-    //                    let domainInput = toDomainInput inputDto
-    //                    let! success = Repository.update profissionalId domainInput
+                    let validationErrors = validateInput inputDto
+                    if not validationErrors.IsEmpty then
+                        let errorResponse = {| errors = validationErrors |}
+                        return! (setStatusCode 400 >=> json errorResponse) next ctx
+                    else
+                        let domainInput = toDomainInput inputDto
+                        let! success = Repository.update profissionalId domainInput
                         
-    //                    if success then
-    //                        let response = {| message = "Profissional atualizado com sucesso" |}
-    //                        return! json response next ctx
-    //                    else
-    //                        let errorResponse = {| error = "Profissional não encontrado ou inativo" |}
-    //                        return! (setStatusCode 404 >=> json errorResponse) next ctx
-    //            with
-    //            | ex ->
-    //                let errorResponse = {| error = "Erro ao atualizar profissional"; details = ex.Message |}
-    //                return! (setStatusCode 500 >=> json errorResponse) next ctx
-    //        }
+                        if success then
+                            let response = {| message = "Profissional atualizado com sucesso" |}
+                            return! json response next ctx
+                        else
+                            let errorResponse = {| error = "Profissional não encontrado ou inativo" |}
+                            return! (setStatusCode 404 >=> json errorResponse) next ctx
+                with
+                | ex ->
+                    let errorResponse = {| error = "Erro ao atualizar profissional"; details = ex.Message |}
+                    return! (setStatusCode 500 >=> json errorResponse) next ctx
+            }
+    [<OpenApiOperation("Desativar Profissional", Description = "Desativa um profissional")>]
+    let deactivateProfissional dataDeEmissao profissionalId : HttpHandler =
+        fun next ctx ->
+            task {
+                try                                        
+                    let! success = Repository.deactivate profissionalId dataDeEmissao
+                    
+                    if success then
+                        let response = {| message = "Profissional desativado com sucesso" |}
+                        return! json response next ctx
+                    else
+                        let errorResponse = {| error = "Profissional não encontrado ou já inativo" |}
+                        return! (setStatusCode 404 >=> json errorResponse) next ctx
+                with
+                | ex ->
+                    let errorResponse = {| error = "Erro ao desativar profissional"; details = ex.Message |}
+                    return! (setStatusCode 500 >=> json errorResponse) next ctx
+            }
 
-    //let deactivateProfissional : HttpHandler =
-    //    fun next ctx ->
-    //        task {
-    //            try
-    //                let profissionalId = ctx.GetRouteValue("id") :?> string |> int
-    //                let dataDemissao = DateTime.Now
+    let getProfissionaisByUnidade unidadeId : HttpHandler =
+        fun next ctx ->
+            task {
+                try
+                    let! profissionais = Repository.getByUnidade unidadeId
+                    let response = profissionais |> List.map toResponse
                     
-    //                let! success = Repository.deactivate profissionalId dataDemissao
-                    
-    //                if success then
-    //                    let response = {| message = "Profissional desativado com sucesso" |}
-    //                    return! json response next ctx
-    //                else
-    //                    let errorResponse = {| error = "Profissional não encontrado ou já inativo" |}
-    //                    return! (setStatusCode 404 >=> json errorResponse) next ctx
-    //            with
-    //            | ex ->
-    //                let errorResponse = {| error = "Erro ao desativar profissional"; details = ex.Message |}
-    //                return! (setStatusCode 500 >=> json errorResponse) next ctx
-    //        }
+                    return! json response next ctx
+                with
+                | ex ->
+                    let errorResponse = {| error = "Erro interno do servidor"; details = ex.Message |}
+                    return! (setStatusCode 500 >=> json errorResponse) next ctx
+            }
 
-    //let getProfissionaisByUnidade : HttpHandler =
-    //    fun next ctx ->
-    //        task {
-    //            try
-    //                let unidadeId = ctx.GetRouteValue("unidadeId") :?> string |> int
+    let getProfissionaisByTipo (tipoString:string) : HttpHandler =
+        fun next ctx ->
+            task {
+                try                    
+                    let tipo = 
+                        match tipoString.ToUpper() with
+                        | "MEDICO" -> Medico
+                        | "ENFERMEIRO" -> Enfermeiro
+                        | "TECNICO" -> Tecnico
+                        | "FISIOTERAPEUTA" -> Fisioterapeuta
+                        | "PSICOLOGO" -> Psicologo
+                        | "NUTRICIONISTA" -> Nutricionista
+                        | "FARMACEUTICO" -> Farmaceutico
+                        | "ADMINISTRATIVO" -> Administrativo
+                        | _ -> failwith "Tipo inválido"
                     
-    //                let! profissionais = Repository.getByUnidade unidadeId
-    //                let response = profissionais |> List.map toResponse
+                    let! profissionais = Repository.getByTipo tipo
+                    let response = profissionais |> List.map toResponse
                     
-    //                return! json response next ctx
-    //            with
-    //            | ex ->
-    //                let errorResponse = {| error = "Erro interno do servidor"; details = ex.Message |}
-    //                return! (setStatusCode 500 >=> json errorResponse) next ctx
-    //        }
+                    return! json response next ctx
+                with
+                | ex ->
+                    let errorResponse = {| error = "Tipo de profissional inválido ou erro interno"; details = ex.Message |}
+                    return! (setStatusCode 400 >=> json errorResponse) next ctx
+            }
 
-    //let getProfissionaisByTipo : HttpHandler =
-    //    fun next ctx ->
-    //        task {
-    //            try
-    //                let tipoString = ctx.GetRouteValue("tipo") :?> string
-    //                let tipo = 
-    //                    match tipoString.ToUpper() with
-    //                    | "MEDICO" -> Medico
-    //                    | "ENFERMEIRO" -> Enfermeiro
-    //                    | "TECNICO" -> Tecnico
-    //                    | "FISIOTERAPEUTA" -> Fisioterapeuta
-    //                    | "PSICOLOGO" -> Psicologo
-    //                    | "NUTRICIONISTA" -> Nutricionista
-    //                    | "FARMACEUTICO" -> Farmaceutico
-    //                    | "ADMINISTRATIVO" -> Administrativo
-    //                    | _ -> failwith "Tipo inválido"
-                    
-    //                let! profissionais = Repository.getByTipo tipo
-    //                let response = profissionais |> List.map toResponse
-                    
-    //                return! json response next ctx
-    //            with
-    //            | ex ->
-    //                let errorResponse = {| error = "Tipo de profissional inválido ou erro interno"; details = ex.Message |}
-    //                return! (setStatusCode 400 >=> json errorResponse) next ctx
-    //        }
-
-    // Rotas
+    // Rotas Profissional
     let routes : HttpHandler =
         choose [
             GET >=> choose [
                 route "" >=> getAllProfissionais
-                //routef "/%i" getProfissionalById
-                //routef "/unidade/%i" getProfissionaisByUnidade
-                //routef "/tipo/%s" getProfissionaisByTipo
+                routef "/%i" getProfissionalById
+                routef "/unidade/%i" getProfissionaisByUnidade
+                routef "/tipo/%s" getProfissionaisByTipo
             ]
             POST >=> route "" >=> createProfissional
-            //PUT >=> routef "/%i" updateProfissional
-            //DELETE >=> routef "/%i" deactivateProfissional
+            PUT >=> routef "/%i" updateProfissional
+            DELETE >=> routef "/%i" (fun i -> deactivateProfissional DateTime.Now i)
         ]

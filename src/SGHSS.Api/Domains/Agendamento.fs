@@ -964,7 +964,7 @@ module Handler =
                     return! (setStatusCode 400 >=> json errorResponse) next ctx
             }
 
-    // Rotas
+    // Rotas Agendamento
     let routes : HttpHandler =
         choose [
             GET >=> choose [

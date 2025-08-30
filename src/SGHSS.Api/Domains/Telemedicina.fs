@@ -1478,7 +1478,7 @@ module Handler =
                     return! (setStatusCode 400 >=> json errorResponse) next ctx
             }
 
-    // Rotas
+    // Rotas Telemedicina
     let routes : HttpHandler =
         choose [
             GET >=> choose [

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     build:
@@ -7,17 +5,17 @@ services:
       dockerfile: docker/Api.Dockerfile
     container_name: sghss_app
     ports:
-      - "8000:80"
-    volumes:
-      - ./volumes/app:/app
+      - "8000:8080"
+    # volumes:
+    # - ./volumes/app:/app
     environment:
-      - ConnectionStrings__DefaultConnection=Host=localhost;Database=sghss;Username=postgres;Password=senha;Port=5432    
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=localhost;Database=sghss;Username=postgres;Password=senha;Port=5432
+      # - ASPNETCORE_ENVIRONMENT=Development
       - CONNECTION_STRING=Host=db;Database=sghss;Username=postgres;Password=senha;Port=5432
       - JWT_SECRET=your-super-secret-jwt-key-here
       - CORS_ORIGINS=http://localhost:3000,https://yourdomain.com
     depends_on:
-      db:        
+      db:
         condition: service_healthy
     restart: unless-stopped
     networks:
@@ -53,7 +51,11 @@ services:
     volumes:
       - redis_data:/data
     networks:
-      - sghss-network
+      - sghss_network
+
+networks:
+  sghss_network:
+    driver: bridge
 volumes:
   postgres_data:
   redis_data:

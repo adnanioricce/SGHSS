@@ -195,7 +195,7 @@ CREATE TABLE prontuarios (
                              queixa_principal TEXT NOT NULL,
                              historia_doenca_atual TEXT NOT NULL,
                              exame_fisico TEXT,
-                             hipoteses TEXT, -- Separated by semicolon
+                             hipoteses TEXT, -- Separated by semicolon                             
                              cid10 VARCHAR(10),
                              observacoes TEXT,
                              plano_tratamento TEXT,
@@ -352,13 +352,12 @@ CREATE TABLE internacoes (
                              data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                              data_atualizacao TIMESTAMP
 );
-
 -- Suprimentos (Medical supplies and inventory)
 CREATE TABLE suprimentos (
                              id SERIAL PRIMARY KEY,
                              nome VARCHAR(200) NOT NULL,
                              categoria VARCHAR(20) NOT NULL CHECK (categoria IN ('MEDICAMENTO', 'MATERIALMEDICO', 'EQUIPAMENTO', 'LIMPEZA', 'ALIMENTACAO', 'ADMINISTRATIVO')),
-                             codigo VARCHAR(50),
+                             codigo VARCHAR(50) UNIQUE,
                              descricao TEXT NOT NULL,
                              unidade_medida VARCHAR(10) NOT NULL,
                              quantidade_estoque DECIMAL(12,3) DEFAULT 0,
@@ -684,7 +683,7 @@ END IF;
 
 RETURN NEW;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_check_leito_ocupacao
     BEFORE UPDATE ON leitos
@@ -693,7 +692,7 @@ CREATE TRIGGER trigger_check_leito_ocupacao
 
 -- Update supply status based on quantity
 CREATE OR REPLACE FUNCTION update_suprimento_status()
-RETURNS TRIGGER AS $
+RETURNS TRIGGER AS $$
 BEGIN
     -- Update status based on quantity
     IF NEW.quantidade_estoque <= 0 THEN
@@ -711,7 +710,7 @@ END IF;
 
 RETURN NEW;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_update_suprimento_status
     BEFORE UPDATE OF quantidade_estoque ON suprimentos
@@ -720,7 +719,7 @@ CREATE TRIGGER trigger_update_suprimento_status
 
 -- Update appointment status when telemedicine session changes
 CREATE OR REPLACE FUNCTION update_agendamento_status_telemedicina()
-RETURNS TRIGGER AS $
+RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.status = 'FINALIZADA' THEN
 UPDATE agendamentos
@@ -734,7 +733,7 @@ WHERE id = NEW.agendamento_id;
 END IF;
 RETURN NEW;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_update_agendamento_status_telemedicina
     AFTER UPDATE OF status ON sessoes_telemedicina
@@ -884,7 +883,7 @@ SELECT
     pr.data_atendimento,
     pr.tipo_atendimento,
     pr.queixa_principal,
-    pr.diagnostico,
+    i.diagnostico,
     pr.cid10,
     prof.nome as profissional_nome,
     prof.crm,
@@ -898,9 +897,10 @@ FROM pacientes p
          LEFT JOIN unidades u ON pr.unidade_id = u.id
          LEFT JOIN prescricoes pre ON pr.id = pre.prontuario_id AND pre.ativo = true
          LEFT JOIN exames_solicitados ex ON pr.id = ex.prontuario_id
+         left join internacoes i on u.id = i.unidade_id
 WHERE p.ativo = true
 GROUP BY p.id, p.nome, p.cpf, p.data_nascimento, pr.id, pr.data_atendimento,
-         pr.tipo_atendimento, pr.queixa_principal, pr.diagnostico, pr.cid10,
+         pr.tipo_atendimento, pr.queixa_principal, i.diagnostico, pr.cid10,
          prof.nome, prof.crm, u.nome, pr.assinado
 ORDER BY p.nome, pr.data_atendimento DESC;
 
@@ -1002,75 +1002,74 @@ WHERE p.nome = 'Médico'
                   'PRONTUARIO_CREATE', 'PRONTUARIO_READ', 'PRONTUARIO_UPDATE', 'PRONTUARIO_SIGN',
                   'TELEMEDICINA_CREATE', 'TELEMEDICINA_READ', 'TELEMEDICINA_UPDATE')
     ON CONFLICT (perfil_id, permissao_id) DO NOTHING;
-
+select * from unidades u
 -- Insert sample rooms
-INSERT INTO salas (nome, unidade_id, tipo_sala, capacidade)
-SELECT 'Consultório ' || generate_series(1, 10), 1, 'CONSULTORIO', 1
-    WHERE NOT EXISTS (SELECT 1 FROM salas WHERE unidade_id = 1 LIMIT 1);
+    INSERT INTO salas (nome, unidade_id, tipo_sala, capacidade)
+SELECT 'Consultório ' || generate_series(1, 10), 2, 'CONSULTORIO', 1
+    WHERE NOT EXISTS (SELECT 1 FROM salas WHERE unidade_id = 2 LIMIT 1);
 
 INSERT INTO salas (nome, unidade_id, tipo_sala, capacidade)
-SELECT 'Sala de Exames ' || generate_series(1, 5), 1, 'EXAME', 2
+SELECT 'Sala de Exames ' || generate_series(1, 5), 2, 'EXAME', 2
     WHERE NOT EXISTS (SELECT 1 FROM salas WHERE nome LIKE 'Sala de Exames%' LIMIT 1);
 
 -- Insert sample beds
 INSERT INTO leitos (unidade_id, numero, setor, tipo_leito, valor_diaria, equipamentos, capacidade_acompanhantes)
 SELECT
-    1, -- unidade_id
-    'L' || LPAD(generate_series(1, 50)::TEXT, 3, '0'), -- numero
+    2, -- unidade_id
+    'L' || LPAD(gs::TEXT, 3, '0'), -- numero
     CASE
-        WHEN generate_series(1, 50) <= 10 THEN 'UTI Adulto'
-        WHEN generate_series(1, 50) <= 15 THEN 'UTI Pediátrica'
-        WHEN generate_series(1, 50) <= 25 THEN 'Semi-UTI'
-        WHEN generate_series(1, 50) <= 35 THEN 'Enfermaria Clínica'
-        WHEN generate_series(1, 50) <= 45 THEN 'Enfermaria Cirúrgica'
+        WHEN gs <= 10 THEN 'UTI Adulto'
+        WHEN gs <= 15 THEN 'UTI Pediátrica'
+        WHEN gs <= 25 THEN 'Semi-UTI'
+        WHEN gs <= 35 THEN 'Enfermaria Clínica'
+        WHEN gs <= 45 THEN 'Enfermaria Cirúrgica'
         ELSE 'Apartamentos'
         END, -- setor
     CASE
-        WHEN generate_series(1, 50) <= 15 THEN 'UTI'
-        WHEN generate_series(1, 50) <= 25 THEN 'SEMIUTI'
-        WHEN generate_series(1, 50) <= 45 THEN 'ENFERMARIA'
+        WHEN gs <= 15 THEN 'UTI'
+        WHEN gs <= 25 THEN 'SEMIUTI'
+        WHEN gs <= 45 THEN 'ENFERMARIA'
         ELSE 'PARTICULAR'
         END, -- tipo_leito
     CASE
-        WHEN generate_series(1, 50) <= 15 THEN 1200.00
-        WHEN generate_series(1, 50) <= 25 THEN 600.00
-        WHEN generate_series(1, 50) <= 45 THEN 300.00
+        WHEN gs <= 15 THEN 1200.00
+        WHEN gs <= 25 THEN 600.00
+        WHEN gs <= 45 THEN 300.00
         ELSE 800.00
         END, -- valor_diaria
     CASE
-        WHEN generate_series(1, 50) <= 15 THEN 'Monitor Multiparâmetro;Ventilador Mecânico;Bomba de Infusão;Oxímetro'
-        WHEN generate_series(1, 50) <= 25 THEN 'Monitor Cardíaco;Oxímetro;Bomba de Infusão'
-        WHEN generate_series(1, 50) <= 45 THEN 'Cama Hospitalar;Suporte Soro;Oxímetro'
+        WHEN gs <= 15 THEN 'Monitor Multiparâmetro;Ventilador Mecânico;Bomba de Infusão;Oxímetro'
+        WHEN gs <= 25 THEN 'Monitor Cardíaco;Oxímetro;Bomba de Infusão'
+        WHEN gs <= 45 THEN 'Cama Hospitalar;Suporte Soro;Oxímetro'
         ELSE 'Cama Hospitalar;TV;Frigobar;Ar Condicionado'
         END, -- equipamentos
     CASE
-        WHEN generate_series(1, 50) <= 25 THEN 1
+        WHEN gs <= 25 THEN 1
         ELSE 2
         END -- capacidade_acompanhantes
-    WHERE NOT EXISTS (SELECT 1 FROM leitos WHERE unidade_id = 1 LIMIT 1);
-
+FROM generate_series(1, 50) AS gs
+WHERE NOT EXISTS (SELECT 1 FROM leitos WHERE unidade_id = 2 LIMIT 1);
 -- Insert sample supplies
 INSERT INTO suprimentos (nome, categoria, codigo, descricao, unidade_medida, quantidade_estoque, quantidade_minima, quantidade_maxima, valor_unitario, fornecedor, data_vencimento, unidade_id, localizacao_estoque)
 VALUES
-    ('Paracetamol 750mg', 'MEDICAMENTO', 'MED001', 'Analgésico e antitérmico', 'CP', 500, 100, 2000, 0.25, 'Farmácia Brasil', '2025-12-31', 1, 'Farmácia - Prateleira A1'),
-    ('Dipirona 500mg', 'MEDICAMENTO', 'MED002', 'Analgésico e antitérmico', 'CP', 300, 50, 1000, 0.30, 'Farmácia Brasil', '2025-11-30', 1, 'Farmácia - Prateleira A2'),
-    ('Soro Fisiológico 500ml', 'MEDICAMENTO', 'MED003', 'Solução fisiológica estéril', 'UN', 200, 50, 500, 3.50, 'MedSupply', '2025-08-15', 1, 'Farmácia - Prateleira B1'),
-    ('Seringa 10ml', 'MATERIALMEDICO', 'MAT001', 'Seringa descartável estéril', 'UN', 1000, 200, 5000, 1.20, 'MedEquip', NULL, 1, 'Almoxarifado - Setor B'),
-    ('Luva Procedimento P', 'MATERIALMEDICO', 'MAT002', 'Luva de procedimento tamanho P', 'UN', 2000, 500, 10000, 0.15, 'ProtectMax', NULL, 1, 'Almoxarifado - Setor A'),
-    ('Luva Procedimento M', 'MATERIALMEDICO', 'MAT003', 'Luva de procedimento tamanho M', 'UN', 15, 100, 10000, 0.15, 'ProtectMax', NULL, 1, 'Almoxarifado - Setor A'),
-    ('Luva Procedimento G', 'MATERIALMEDICO', 'MAT004', 'Luva de procedimento tamanho G', 'UN', 1500, 300, 8000, 0.15, 'ProtectMax', NULL, 1, 'Almoxarifado - Setor A'),
-    ('Gaze Estéril 7.5x7.5', 'MATERIALMEDICO', 'MAT005', 'Gaze estéril para curativos', 'PCT', 50, 20, 200, 2.30, 'SterileMax', '2025-06-30', 1, 'Almoxarifado - Setor C'),
-    ('Álcool 70%', 'LIMPEZA', 'LMP001', 'Álcool etílico 70% para assepsia', 'L', 30, 15, 100, 8.50, 'CleanPro', '2026-12-31', 1, 'Limpeza - Estoque Principal'),
-    ('Detergente Hospitalar', 'LIMPEZA', 'LMP002', 'Detergente para limpeza hospitalar', 'L', 8, 20, 80, 12.00, 'CleanPro', '2025-03-15', 1, 'Limpeza - Estoque Principal')
+    ('Paracetamol 750mg', 'MEDICAMENTO', 'MED001', 'Analgésico e antitérmico', 'CP', 500, 100, 2000, 0.25, 'Farmácia Brasil', '2025-12-31', 2, 'Farmácia - Prateleira A1'),
+    ('Dipirona 500mg', 'MEDICAMENTO', 'MED002', 'Analgésico e antitérmico', 'CP', 300, 50, 1000, 0.30, 'Farmácia Brasil', '2025-11-30', 2, 'Farmácia - Prateleira A2'),
+    ('Soro Fisiológico 500ml', 'MEDICAMENTO', 'MED003', 'Solução fisiológica estéril', 'UN', 200, 50, 500, 3.50, 'MedSupply', '2025-08-15', 2, 'Farmácia - Prateleira B1'),
+    ('Seringa 10ml', 'MATERIALMEDICO', 'MAT001', 'Seringa descartável estéril', 'UN', 1000, 200, 5000, 1.20, 'MedEquip', NULL, 2, 'Almoxarifado - Setor B'),
+    ('Luva Procedimento P', 'MATERIALMEDICO', 'MAT002', 'Luva de procedimento tamanho P', 'UN', 2000, 500, 10000, 0.15, 'ProtectMax', NULL, 2, 'Almoxarifado - Setor A'),
+    ('Luva Procedimento M', 'MATERIALMEDICO', 'MAT003', 'Luva de procedimento tamanho M', 'UN', 15, 100, 10000, 0.15, 'ProtectMax', NULL, 2, 'Almoxarifado - Setor A'),
+    ('Luva Procedimento G', 'MATERIALMEDICO', 'MAT004', 'Luva de procedimento tamanho G', 'UN', 1500, 300, 8000, 0.15, 'ProtectMax', NULL, 2, 'Almoxarifado - Setor A'),
+    ('Gaze Estéril 7.5x7.5', 'MATERIALMEDICO', 'MAT005', 'Gaze estéril para curativos', 'PCT', 50, 20, 200, 2.30, 'SterileMax', '2025-06-30', 2, 'Almoxarifado - Setor C'),
+    ('Álcool 70%', 'LIMPEZA', 'LMP001', 'Álcool etílico 70% para assepsia', 'L', 30, 15, 100, 8.50, 'CleanPro', '2026-12-31', 2, 'Limpeza - Estoque Principal'),
+    ('Detergente Hospitalar', 'LIMPEZA', 'LMP002', 'Detergente para limpeza hospitalar', 'L', 8, 20, 80, 12.00, 'CleanPro', '2025-03-15', 2, 'Limpeza - Estoque Principal')
     ON CONFLICT (codigo) DO NOTHING;
-
 -- =====================================================
 -- 14. MAINTENANCE PROCEDURES
 -- =====================================================
 
 -- Procedure to clean old audit logs (keep last 2 years)
 CREATE OR REPLACE FUNCTION limpar_audit_logs_antigos()
-RETURNS void AS $
+RETURNS void AS $$
 BEGIN
 DELETE FROM audit_logs
 WHERE timestamp < CURRENT_TIMESTAMP - INTERVAL '2 years';
@@ -1080,29 +1079,29 @@ INSERT INTO audit_logs (user_id, action, entity_type, entity_id, new_values)
 VALUES (0, 'CLEANUP', 'AUDIT_LOGS', 'SYSTEM',
         jsonb_build_object('message', 'Limpeza automática de logs antigos executada'));
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Procedure to update expired supplies
 CREATE OR REPLACE FUNCTION atualizar_suprimentos_vencidos()
-RETURNS void AS $
+RETURNS void AS $$
 BEGIN
+with affected_rows as (
 UPDATE suprimentos
 SET status = 'VENCIDO', data_atualizacao = CURRENT_TIMESTAMP
 WHERE data_vencimento <= CURRENT_DATE
-  AND status NOT IN ('VENCIDO', 'DESCARTADO');
-
-GET DIAGNOSTICS affected_rows = ROW_COUNT;
+  AND status NOT IN ('VENCIDO', 'DESCARTADO')
+    RETURNING *)
 
 -- Log the update
 INSERT INTO audit_logs (user_id, action, entity_type, entity_id, new_values)
 VALUES (0, 'AUTO_UPDATE', 'SUPRIMENTOS', 'SYSTEM',
-        jsonb_build_object('affected_rows', affected_rows, 'message', 'Atualização automática de suprimentos vencidos'));
+    jsonb_build_object('affected_rows', affected_rows, 'message', 'Atualização automática de suprimentos vencidos'));
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Procedure to generate automatic financial report
 CREATE OR REPLACE FUNCTION gerar_relatorio_mensal_automatico()
-RETURNS void AS $
+RETURNS void AS $$
 DECLARE
 current_month VARCHAR(7);
     unit_record RECORD;
@@ -1150,7 +1149,7 @@ GROUP BY u.id
 ON CONFLICT (unidade_id, periodo) DO NOTHING;
 END LOOP;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- =====================================================
 -- 15. COMMENTS AND DOCUMENTATION

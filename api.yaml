@@ -1,0 +1,467 @@
+openapi: 3.0.1
+info:
+  title: SGHSS API
+  version: v1
+  description: API do Sistema de Gestão Hospitalar e de Serviços de Saúde (SGHSS)
+
+servers:
+  - url: /api/v1
+
+paths:
+  # ---------------- Pacientes ----------------
+  /pacientes:
+    get:
+      summary: Listar pacientes
+      description: Retorna todos os pacientes cadastrados
+      responses:
+        "200":
+          description: Lista de pacientes
+    post:
+      summary: Criar paciente
+      description: Cria um novo paciente
+      responses:
+        "201":
+          description: Paciente criado
+  /pacientes/{id}:
+    get:
+      summary: Obter paciente por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { description: Paciente encontrado }
+        "404": { description: Paciente não encontrado }
+    put:
+      summary: Atualizar paciente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { description: Paciente atualizado }
+    delete:
+      summary: Desativar paciente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204": { description: Paciente desativado }
+  /pacientes/search:
+    get:
+      summary: Buscar pacientes
+      responses:
+        "200": { description: Resultados da busca }
+  /pacientes/{id}/detalhes:
+    get:
+      summary: Detalhes do paciente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { description: Detalhes do paciente }
+  /pacientes/{id}/historico:
+    get:
+      summary: Histórico médico do paciente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { description: Histórico médico }
+  /pacientes/cpf/{cpf}:
+    get:
+      summary: Buscar paciente por CPF
+      parameters:
+        - name: cpf
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Paciente encontrado }
+        "404": { description: Não encontrado }
+  /pacientes/{id}/reativar:
+    post:
+      summary: Reativar paciente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { description: Paciente reativado }
+
+  # ---------------- Profissionais ----------------
+  /profissionais:
+    get:
+      summary: Listar profissionais
+      responses:
+        "200": { description: Lista de profissionais }
+    post:
+      summary: Criar profissional
+      responses:
+        "201": { description: Profissional criado }
+  /profissionais/{id}:
+    get:
+      summary: Obter profissional por ID
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        "200": { description: Profissional encontrado }
+    put:
+      summary: Atualizar profissional
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        "200": { description: Atualizado }
+    delete:
+      summary: Desativar profissional
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        "204": { description: Desativado }
+  /profissionais/unidade/{id}:
+    get:
+      summary: Profissionais por unidade
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { "200": { description: Lista por unidade } }
+  /profissionais/tipo/{tipo}:
+    get:
+      summary: Profissionais por tipo
+      parameters:
+        [{ name: tipo, in: path, required: true, schema: { type: string } }]
+      responses: { "200": { description: Lista por tipo } }
+
+  # ---------------- Agendamentos ----------------
+  /agendamentos:
+    get:
+      summary: Listar agendamentos
+      responses: { "200": { description: Lista de agendamentos } }
+    post:
+      summary: Criar agendamento
+      responses: { "201": { description: Criado } }
+  /agendamentos/{id}:
+    get:
+      summary: Obter agendamento
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { "200": { description: Encontrado } }
+    put:
+      summary: Atualizar agendamento
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { "200": { description: Atualizado } }
+    delete:
+      summary: Cancelar agendamento
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { "204": { description: Cancelado } }
+  /agendamentos/{id}/detalhes:
+    get:
+      summary: Detalhes do agendamento
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { "200": { description: Detalhes } }
+  /agendamentos/paciente/{id}:
+    get:
+      summary: Agendamentos por paciente
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { "200": { description: Lista por paciente } }
+  /agendamentos/profissional/{id}:
+    get:
+      summary: Agendamentos por profissional
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { "200": { description: Lista por profissional } }
+  /agendamentos/profissional/{id}/disponibilidade:
+    get:
+      summary: Verificar disponibilidade do profissional
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { "200": { description: Disponibilidade } }
+  /agendamentos/{id}/confirmar:
+    post:
+      summary: Confirmar agendamento
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { "200": { description: Confirmado } }
+  /agendamentos/{id}/realizar:
+    post:
+      summary: Marcar agendamento como realizado
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { "200": { description: Realizado } }
+  /agendamentos/{id}/status:
+    put:
+      summary: Atualizar status do agendamento
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { "200": { description: Status atualizado } }
+
+  # ---------------- Prontuários ----------------
+  /prontuarios:
+    get:
+      summary: Listar prontuários
+      responses: { "200": { description: Lista } }
+    post:
+      summary: Criar prontuário
+      responses: { "201": { description: Criado } }
+  /prontuarios/{id}:
+    get:
+      summary: Obter prontuário
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { "200": { description: Encontrado } }
+    put:
+      summary: Atualizar prontuário
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { "200": { description: Atualizado } }
+  /prontuarios/paciente/{id}/historico:
+    get:
+      summary: Histórico do paciente
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { "200": { description: Histórico } }
+  /prontuarios/{id}/assinar:
+    post:
+      summary: Assinar prontuário
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { "200": { description: Assinado } }
+  /prontuarios/{id}/prescricoes:
+    post:
+      summary: Adicionar prescrição
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { "201": { description: Prescrição adicionada } }
+  /prontuarios/{id}/exames:
+    post:
+      summary: Adicionar exame
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { "201": { description: Exame adicionado } }
+  /prontuarios/{id}/procedimentos:
+    post:
+      summary: Adicionar procedimento
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { "201": { description: Procedimento adicionado } }
+  /prontuarios/exames/{id}/resultado:
+    put:
+      summary: Adicionar resultado de exame
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { "200": { description: Resultado adicionado } }
+  /prontuarios/prescricoes/{id}:
+    delete:
+      summary: Inativar prescrição
+      parameters:
+        [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { "204": { description: Inativada } }
+
+  # ---------------- Telemedicina ----------------
+  /telemedicina:
+    get:
+      { summary: Listar sessões, responses: { "200": { description: Lista } } }
+    post:
+      { summary: Criar sessão, responses: { "201": { description: Criada } } }
+  /telemedicina/{id}:
+    get:
+      {
+        summary: Obter sessão,
+        parameters:
+          [{ name: id, in: path, required: true, schema: { type: integer } }],
+        responses: { "200": { description: Sessão } },
+      }
+    delete:
+      {
+        summary: Cancelar sessão,
+        parameters:
+          [{ name: id, in: path, required: true, schema: { type: integer } }],
+        responses: { "204": { description: Cancelada } },
+      }
+  /telemedicina/{id}/detalhes:
+    get:
+      {
+        summary: Detalhes da sessão,
+        parameters:
+          [{ name: id, in: path, required: true, schema: { type: integer } }],
+        responses: { "200": { description: Detalhes } },
+      }
+  /telemedicina/{id}/status:
+    get:
+      {
+        summary: Status da sessão,
+        parameters:
+          [{ name: id, in: path, required: true, schema: { type: integer } }],
+        responses: { "200": { description: Status } },
+      }
+  /telemedicina/{id}/entrar:
+    post:
+      {
+        summary: Entrar na sessão,
+        parameters:
+          [{ name: id, in: path, required: true, schema: { type: integer } }],
+        responses: { "200": { description: Entrou } },
+      }
+  /telemedicina/{id}/finalizar:
+    post:
+      {
+        summary: Finalizar sessão,
+        parameters:
+          [{ name: id, in: path, required: true, schema: { type: integer } }],
+        responses: { "200": { description: Finalizada } },
+      }
+  /telemedicina/{id}/sair/{usuarioId}:
+    delete:
+      summary: Sair da sessão
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+        - {
+            name: usuarioId,
+            in: path,
+            required: true,
+            schema: { type: integer },
+          }
+      responses: { "204": { description: Saiu } }
+  /telemedicina/dashboard:
+    get:
+      {
+        summary: Dashboard telemedicina,
+        responses: { "200": { description: Dashboard } },
+      }
+  /telemedicina/profissional/{id}/configuracoes:
+    get:
+      {
+        summary: Configurações do profissional,
+        parameters:
+          [{ name: id, in: path, required: true, schema: { type: integer } }],
+        responses: { "200": { description: Configurações } },
+      }
+  /telemedicina/profissional/{id}/disponibilidade:
+    get:
+      {
+        summary: Verificar disponibilidade,
+        parameters:
+          [{ name: id, in: path, required: true, schema: { type: integer } }],
+        responses: { "200": { description: Disponibilidade } },
+      }
+  /telemedicina/configuracoes:
+    put:
+      {
+        summary: Atualizar configurações,
+        responses: { "200": { description: Configurações atualizadas } },
+      }
+
+  # ---------------- Administração ----------------
+  /admin/unidades:
+    get:
+      { summary: Listar unidades, responses: { "200": { description: Lista } } }
+    post:
+      { summary: Criar unidade, responses: { "201": { description: Criada } } }
+  /admin/unidades/{id}:
+    get:
+      {
+        summary: Obter unidade,
+        parameters:
+          [{ name: id, in: path, required: true, schema: { type: integer } }],
+        responses: { "200": { description: Encontrada } },
+      }
+    put:
+      {
+        summary: Atualizar unidade,
+        parameters:
+          [{ name: id, in: path, required: true, schema: { type: integer } }],
+        responses: { "200": { description: Atualizada } },
+      }
+  /admin/leitos:
+    get:
+      { summary: Listar leitos, responses: { "200": { description: Lista } } }
+    post:
+      { summary: Criar leito, responses: { "201": { description: Criado } } }
+  /admin/leitos/detalhes:
+    get:
+      {
+        summary: Detalhes de leitos,
+        responses: { "200": { description: Detalhes } },
+      }
+  /admin/leitos/{id}:
+    get:
+      {
+        summary: Obter leito,
+        parameters:
+          [{ name: id, in: path, required: true, schema: { type: integer } }],
+        responses: { "200": { description: Encontrado } },
+      }
+  /admin/leitos/{id}/status:
+    put:
+      {
+        summary: Atualizar status do leito,
+        parameters:
+          [{ name: id, in: path, required: true, schema: { type: integer } }],
+        responses: { "200": { description: Atualizado } },
+      }
+  /admin/internacoes:
+    get:
+      {
+        summary: Listar internações,
+        responses: { "200": { description: Lista } },
+      }
+    post:
+      {
+        summary: Criar internação,
+        responses: { "201": { description: Criada } },
+      }
+  /admin/internacoes/{id}:
+    get:
+      {
+        summary: Obter internação,
+        parameters:
+          [{ name: id, in: path, required: true, schema: { type: integer } }],
+        responses: { "200": { description: Encontrada } },
+      }
+  /admin/internacoes/{id}/detalhes:
+    get:
+      {
+        summary: Detalhes da internação,
+        parameters:
+          [{ name: id, in: path, required: true, schema: { type: integer } }],
+        responses: { "200": { description: Detalhes } },
+      }
+  /admin/internacoes/{id}/alta:
+    post:
+      {
+        summary: Dar alta,
+        parameters:
+          [{ name: id, in: path, required: true, schema: { type: integer } }],
+        responses: { "200": { description: Alta realizada } },
+      }
+  /admin/suprimentos:
+    get:
+      {
+        summary: Listar suprimentos,
+        responses: { "200": { description: Lista } },
+      }
+    post:
+      {
+        summary: Criar suprimento,
+        responses: { "201": { description: Criado } },
+      }
+  /admin/suprimentos/{id}/movimentar:
+    post:
+      {
+        summary: Movimentar estoque,
+        parameters:
+          [{ name: id, in: path, required: true, schema: { type: integer } }],
+        responses: { "200": { description: Movimentação registrada } },
+      }

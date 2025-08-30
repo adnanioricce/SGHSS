@@ -2317,7 +2317,7 @@ module Handler =
     //                 return! (setStatusCode 500 >=> json errorResponse) next ctx
     //         }
 
-    // Rotas
+    // Rotas Administracao
     let routes : HttpHandler =
         choose [
             GET >=> choose [
