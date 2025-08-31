@@ -1,0 +1,24 @@
+POST https://localhost:58078/auth/login
+#@SGH_HostAddress=https://localhost:58078
+#Accept: application/json
+Content-Type: application/json
+#Host: {{@SGH_HostAddress}}
+
+{
+    "email": "admin@sghss.com",
+    "password": "Admin123!"
+}
+
+#Resposta esperada:
+#{
+#    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+#    "refreshToken": "base64-encoded-refresh-token",
+#    "expiresAt": "2024-12-01T11:00:00Z",
+#    "user": {
+#        "id": 1,
+#        "nome": "Administrador do Sistema",
+#        "email": "admin@sghss.com",
+#        "roles": ["Administrador"],
+#        "unidadeId": null
+#    }
+#}

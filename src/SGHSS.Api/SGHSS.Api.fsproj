@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
 <!--    <PackageReference Include="FSharp.Core" Version="8.0.301" />-->
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="FSharp.Json" Version="0.4.1" />
     <PackageReference Include="Giraffe" Version="6.4.0" />
     <PackageReference Include="Giraffe.ViewEngine" Version="1.4.*" />
@@ -20,6 +21,7 @@
     <PackageReference Include="Serilog" Version="4.3.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+<!--    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.3" />-->
     
 <!--    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4" />-->
   </ItemGroup>
@@ -34,8 +36,8 @@
     <Compile Include="Logging\AuditLogger.fs" />
     <Compile Include="Logging\Logger.fs" />
     <Compile Include="Logging\RequestLoggingMiddleware.fs" />
-    <Compile Include="Security\Authentication.fs" />
     <Compile Include="Database\DbContext.fs" />
+    <Compile Include="Security\Authentication.fs" />
     <Compile Include="Domains\Administracao.fs" />
     <Compile Include="Domains\Telemedicina.fs" />
     <Compile Include="Domains\Prontuario.fs" />
@@ -52,6 +54,14 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Sql\0001_init.sql" />
+    <Content Include="Sql\0002_auth.sql" />
     <Folder Include="DSLs\" />
+    <Content Include="HttpRequests\login.http" />
+    <Content Include="HttpRequests\pacientes.http" />
+    <Content Include="HttpRequests\changePassword.http" />
+    <Content Include="HttpRequests\createUser.http" />
+    <Content Include="HttpRequests\refreshToken.http" />
+    <Content Include="HttpRequests\creds.json" />
+    <Folder Include="HttpRequests\Auth\" />
   </ItemGroup>
 </Project>

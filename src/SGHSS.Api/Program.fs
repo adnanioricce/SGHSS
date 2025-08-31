@@ -3,6 +3,7 @@ module SGHSS.Api.App
 open System
 open System.IO
 open System.Threading.Tasks
+open Infrastructure.Security
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Cors.Infrastructure
 open Microsoft.AspNetCore.Hosting
@@ -29,32 +30,44 @@ open NSwag.Annotations
 open Giraffe
 open SGHSS.Api.Logging
 open Serilog
+open System
+open Microsoft.AspNetCore.Builder
+open Microsoft.Extensions.DependencyInjection
+open Microsoft.Extensions.Hosting
+open Giraffe
+open Infrastructure.Security.AuthHandlers
+open Infrastructure.Security.Authorization
+open Infrastructure.Security.AuthStartup
+open Infrastructure.Security.UserManagementHandlers
 
 let webApp =
     choose [
         GET >=> route "/" >=> text "Welcome to SGHSS API"
+        // Public authentication routes
+        subRoute "/auth" AuthHandlers.routes
         //route "/pacientes" >=> Domains.Paciente.Handler.routes
         // Rotas autenticadas
         subRoute "/api/v1" (
-            choose [
+            requireAuth >=> choose [
                 // Pacientes
-                subRoute "/pacientes" Domains.Paciente.Handler.routes
+                subRoute "/pacientes" (healthcareProfessional() >=> Domains.Paciente.Handler.routes)
                 
                 // Profissionais
-                subRoute "/profissionais" Domains.Profissional.Handler.routes
+                subRoute "/profissionais" (internalOnly() >=> Domains.Profissional.Handler.routes)
                 
                 //// Agendamentos
-                subRoute "/agendamentos" Domains.Agendamento.Handler.routes
+                subRoute "/agendamentos" (healthcareProfessional() >=> Domains.Agendamento.Handler.routes)
                 
                 //// Prontuários
-                subRoute "/prontuarios" Domains.Prontuario.Handler.routes
+                subRoute "/prontuarios" (medicoOrEnfermeiro() >=> Domains.Prontuario.Handler.routes)
                 
                 //// Telemedicina
-                subRoute "/telemedicina" Domains.Telemedicina.Handler.routes
+                subRoute "/telemedicina" (medicoOnly() >=> Domains.Telemedicina.Handler.routes)
                 
                 //// Administração
-                subRoute "/admin" Domains.Administracao.Handler.routes
+                subRoute "/admin" (adminOnly() >=> Domains.Administracao.Handler.routes)
                 
+                subRoute "/users" (adminOnly() >=> UserManagementHandlers.routes)
                 //// Relatórios
                 //subRoute "/relatorios" Domains.Relatorios.Handler.routes
             ]
@@ -65,18 +78,6 @@ let webApp =
         setStatusCode 405 >=> text "Method Not Allowed"
         setStatusCode 500 >=> text "Internal Server Error"
         setStatusCode 404 >=> text "Not Found" ]
-let configureJwt (services: IServiceCollection) =
-    services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddJwtBearer(fun options ->
-                options.TokenValidationParameters <- 
-                    TokenValidationParameters(
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = SymmetricSecurityKey(Encoding.UTF8.GetBytes("<PEGUE O VALOR DE UM ARQUIVO DE CONFIG OU DE UMA VARIAVEL DE AMBIENTE>")),
-                        ValidateIssuer = false,
-                        ValidateAudience = false,
-                        ClockSkew = TimeSpan.Zero
-                    )
-            ) |> ignore
 let configureSwagger (services: IServiceCollection) =
     services.AddEndpointsApiExplorer() |> ignore
     // NSwag setup
@@ -131,9 +132,10 @@ let configureApp (app : IApplicationBuilder) =
     | false ->
         app .UseGiraffeErrorHandler(errorHandler)
             .UseHttpsRedirection())
-        .UseCors((configureCors (app.ApplicationServices.GetService<IConfiguration>())))
+        .UseCors((configureCors (app.ApplicationServices.GetService<IConfiguration>())))        
         .UseStaticFiles()
-        .UseGiraffe(webApp)
+        |> configureAuthMiddleware
+        |> (fun builder -> builder.UseGiraffe(webApp))
 
 let configureServices (services : IServiceCollection) =
     services.AddCors()    |> ignore
@@ -147,7 +149,7 @@ let configureServices (services : IServiceCollection) =
     // services.AddHttpLogging(fun opt ->
     //     opt.CombineLogs <- true
     //     opt.LoggingFields <- HttpLoggingFields.All) |> ignore
-    configureJwt services |> ignore
+    configureJwtAuthentication services |> ignore
     configureSwagger services |> ignore
 
 let configureLogging (builder : ILoggingBuilder) =
@@ -157,6 +159,9 @@ let configureLogging (builder : ILoggingBuilder) =
 let main args =
     let contentRoot = Directory.GetCurrentDirectory()
     let webRoot     = Path.Combine(contentRoot, "WebRoot")
+    // quero evitar isso ficar aparecendo no banco de logs no futuro,
+    // mesmo que não seja um projeto sério. 
+    printfn "%s" (Authentication.hashPassword None "Admin123!")
     Logger.logger.Information("Iniciando aplicação...")
     Host.CreateDefaultBuilder(args)
         .ConfigureWebHostDefaults(

@@ -12,8 +12,12 @@ services:
       - ConnectionStrings__DefaultConnection=Host=localhost;Database=sghss;Username=postgres;Password=senha;Port=5432;Include Error Detail=true
       # - ASPNETCORE_ENVIRONMENT=Development
       - CONNECTION_STRING=Host=db;Database=sghss;Username=postgres;Password=senha;Port=5432
-      - JWT_SECRET=your-super-secret-jwt-key-here
-      - CORS_ORIGINS=http://localhost:3000,https://yourdomain.com
+      - JWT_SECRET=cc58d056-f4c1-4901-a8c2-26d7bbd56de2
+      - JWT_ISSUER=SGHSS.Api
+      - JWT_AUDIENCE=SGHSS.Client
+      - JWT_EXPIRE_MINUTES=60
+      - JWT_REFRESH_DAYS=7
+      - CORS_ORIGINS=http://localhost:3000,https://sghss.adnangonzaga.dev,https://sghss.adnangonzaga.com
     depends_on:
       db:
         condition: service_healthy
