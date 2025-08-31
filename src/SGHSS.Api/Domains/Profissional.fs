@@ -4,6 +4,7 @@ open System
 open Infrastructure.Database
 open NSwag
 open NSwag.Annotations
+open SGHSS.Api.Logging.Logger
 
 module Models =
     type TipoProfissional = 
@@ -91,7 +92,7 @@ module Repository =
         | Administrativo -> "ADMINISTRATIVO"
 
     let getAll (ativo: bool option) =
-        task {
+        async {
             let query = 
                 match ativo with
                 | Some true -> 
@@ -130,7 +131,7 @@ module Repository =
                     PermiteTelemedicina = read.bool "permite_telemedicina"
                     DataCadastro = read.dateTime "data_cadastro"
                     DataAtualizacao = read.dateTimeOrNone "data_atualizacao"
-                })
+                }) |> Async.AwaitTask
         }
 
     let getById (id: int) =
@@ -451,14 +452,15 @@ module Handler =
                         | Some "true" -> Some true
                         | Some "false" -> Some false
                         | _ -> None
-
+                    logger.Information("Recebeu requisição para listar profissionais. paramêtros:{params}",ativo)
                     let! profissionais = Repository.getAll ativo
                     let response = profissionais |> List.map toResponse
                     
                     return! json response next ctx
                 with
                 | ex ->
-                    let errorResponse = {| error = "Erro interno do servidor"; details = ex.Message |}
+                    let errorResponse = {| error = "Erro interno do servidor"; details = ex.ToString() |}
+                    logger.Error("Erro interno do servidor: {ex}",ex)
                     return! (setStatusCode 500 >=> json errorResponse) next ctx
             }
     [<OpenApiOperation("Get Profissional Por Id", Description = "Consulta um profissional por Id")>]
@@ -466,16 +468,18 @@ module Handler =
         fun next ctx ->
             task {
                 try
+                    logger.Information("Recebeu requisição para consultar profissional. paramêtros:{params}",{|ProfissionalId = profissionalId|})
                     let! profissional = Repository.getById profissionalId
                     let response = toResponse profissional
                     
                     return! json response next ctx
                 with
                 | :? System.InvalidOperationException ->
-                    let errorResponse = {| error = "Profissional não encontrado" |}
+                    let errorResponse = {| error = "Profissional não encontrado" |}                    
                     return! (setStatusCode 404 >=> json errorResponse) next ctx
                 | ex ->
                     let errorResponse = {| error = "Erro interno do servidor"; details = ex.Message |}
+                    logger.Error("Erro interno do servidor: {ex}",ex)
                     return! (setStatusCode 500 >=> json errorResponse) next ctx
             }
     [<OpenApiOperation("Create Profissional", Description = "Salva os dados de um profissional no sistema")>]
@@ -484,20 +488,23 @@ module Handler =
             task {
                 try
                     let! inputDto = ctx.BindJsonAsync<ProfissionalInputDto>()
-                    
+                    logger.Information("Recebeu requisição para criar profissional. paramêtros:{params}",inputDto)
                     let validationErrors = validateInput inputDto
                     if not validationErrors.IsEmpty then
                         let errorResponse = {| errors = validationErrors |}
+                        logger.Information("Recebeu requisição com erros de validação para criar profissional. paramêtros:{params}, erros = {errorResponse}",inputDto,errorResponse)
                         return! (setStatusCode 400 >=> json errorResponse) next ctx
                     else
                         let domainInput = toDomainInput inputDto
+                        logger.Information("Requisição para criar profissional foi validada. paramêtros:{params}, domainInput = {domainInput}",inputDto,domainInput)
                         let! id = Repository.insert domainInput
                         let response = {| id = id; message = "Profissional criado com sucesso" |}
-                        
+                        logger.Information("Profissional criado. paramêtros:{params}, domainInput = {domainInput}",inputDto,domainInput)
                         return! (setStatusCode 201 >=> json response) next ctx
                 with
                 | ex ->
                     let errorResponse = {| error = "Erro ao criar profissional"; details = ex.Message |}
+                    logger.Error("Erro interno do servidor: {ex}",ex)
                     return! (setStatusCode 500 >=> json errorResponse) next ctx
             }
     [<OpenApiOperation("Update Profissional", Description = "Atualiza os dados de um profissional")>]
@@ -507,10 +514,11 @@ module Handler =
             task {
                 try                    
                     let! inputDto = ctx.BindJsonAsync<ProfissionalInputDto>()
-                    
+                    logger.Information("Recebeu requisição para atualizar profissional. paramêtros:{params}",inputDto)
                     let validationErrors = validateInput inputDto
                     if not validationErrors.IsEmpty then
                         let errorResponse = {| errors = validationErrors |}
+                        logger.Information("Recebeu requisição com erros de validação para atualizar profissional. paramêtros:{params}, erros = {errorResponse}",inputDto,errorResponse)
                         return! (setStatusCode 400 >=> json errorResponse) next ctx
                     else
                         let domainInput = toDomainInput inputDto

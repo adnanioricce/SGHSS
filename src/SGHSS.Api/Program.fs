@@ -2,15 +2,22 @@ module SGHSS.Api.App
 
 open System
 open System.IO
+open System.Threading.Tasks
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Cors.Infrastructure
 open Microsoft.AspNetCore.Hosting
+open Microsoft.AspNetCore.Http
+open Microsoft.AspNetCore.HttpLogging
 open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.Logging
 open Microsoft.Extensions.DependencyInjection
 open Giraffe
 open Microsoft.Extensions.Configuration
 open Microsoft.AspNetCore.Authentication.JwtBearer
+open Microsoft.AspNetCore.Builder
+open Microsoft.Extensions.DependencyInjection
+open Newtonsoft.Json
+open Newtonsoft.Json.FSharp
 open Microsoft.IdentityModel.Tokens
 open System.Text
 // open Microsoft.OpenApi.Models
@@ -20,8 +27,8 @@ open NSwag
 open NSwag.Generation.Processors.Security
 open NSwag.Annotations
 open Giraffe
-//open Microsoft.AspNetCore.Authentication.JwtBearer
-
+open SGHSS.Api.Logging
+open Serilog
 
 let webApp =
     choose [
@@ -87,8 +94,9 @@ let configureSwagger (services: IServiceCollection) =
 // Error handler
 // ---------------------------------
 
-let errorHandler (ex : Exception) (logger : ILogger) =
-    logger.LogError(ex, "An unhandled exception has occurred while executing the request.")
+let errorHandler (ex : Exception) (logger : Microsoft.Extensions.Logging.ILogger) =
+    Logger.logger.Error(ex, "An unhandled exception has occurred while executing the request.")
+    // logger.LogError(ex, "An unhandled exception has occurred while executing the request.")
     clearResponse >=> setStatusCode 500 >=> text ex.Message
 
 // ---------------------------------
@@ -108,10 +116,14 @@ let configureCors (configuration:IConfiguration) =
 
 let configureApp (app : IApplicationBuilder) =
     let env = app.ApplicationServices.GetService<IWebHostEnvironment>()
+    app.UseSerilogRequestLogging() |> ignore
     // app.UseSwagger() |> ignore
     // app.UseSwaggerUI(fun c -> c.SwaggerEndpoint("/swagger/v1/swagger.json", "SGHSS Api v1")) |> ignore
     app.UseOpenApi() |> ignore              // Serves /swagger/v1/swagger.json
     app.UseSwaggerUi() |> ignore           // Serves Swagger UI at /swagger
+    // app.UseMiddleware(fun next ->
+    //     let func:Func<HttpContext,Task<unit>> = RequestLoggingMiddleware.requestResponseLoggingMiddleware next
+    //     func) |> ignore    
     (match env.IsDevelopment() with
     | true  ->
         app.UseDeveloperExceptionPage()
@@ -126,18 +138,26 @@ let configureApp (app : IApplicationBuilder) =
 let configureServices (services : IServiceCollection) =
     services.AddCors()    |> ignore
     services.AddGiraffe() |> ignore
-    services.AddLogging() |> ignore
+    // .AddControllers().AddNewtonsoftJson(fun opts ->
+    //     // Enable F# support
+    //     opts.SerializerSettings.Converters.Add(FSharpConverter())
+    //     opts.SerializerSettings.NullValueHandling <- NullValueHandling.Ignore) |> ignore
+    // services.AddLogging() |> ignore
+    services.AddSerilog() |> ignore    
+    // services.AddHttpLogging(fun opt ->
+    //     opt.CombineLogs <- true
+    //     opt.LoggingFields <- HttpLoggingFields.All) |> ignore
     configureJwt services |> ignore
     configureSwagger services |> ignore
 
 let configureLogging (builder : ILoggingBuilder) =
-    builder.AddConsole()
-           .AddDebug() |> ignore
+    builder.AddConsole().AddSerilog(Logger.logger) |> ignore
 
 [<EntryPoint>]
 let main args =
     let contentRoot = Directory.GetCurrentDirectory()
     let webRoot     = Path.Combine(contentRoot, "WebRoot")
+    Logger.logger.Information("Iniciando aplicação...")
     Host.CreateDefaultBuilder(args)
         .ConfigureWebHostDefaults(
             fun webHostBuilder ->

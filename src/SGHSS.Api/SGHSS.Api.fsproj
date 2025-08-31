@@ -7,20 +7,33 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <ItemGroup>
+<!--    <PackageReference Include="FSharp.Core" Version="8.0.301" />-->
+    <PackageReference Include="FSharp.Json" Version="0.4.1" />
     <PackageReference Include="Giraffe" Version="6.4.0" />
     <PackageReference Include="Giraffe.ViewEngine" Version="1.4.*" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.19" />
+    <PackageReference Include="Newtonsoft.Json.FSharp" Version="3.2.2" />
     <PackageReference Include="Npgsql" Version="9.0.3" />
-    <PackageReference Include="Npgsql.FSharp" Version="8.0.0" />
+    <PackageReference Include="Npgsql.FSharp" Version="5.7.0" />
     <PackageReference Include="NSwag.Annotations" Version="14.5.0" />
     <PackageReference Include="NSwag.AspNetCore" Version="14.5.0" />
+    <PackageReference Include="Serilog" Version="4.3.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    
 <!--    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4" />-->
   </ItemGroup>
   <ItemGroup>
     <Content Include="appsettings.Development.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="appsettings.Production.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Compile Include="Utils.fs" />
     <Compile Include="Logging\AuditLogger.fs" />
+    <Compile Include="Logging\Logger.fs" />
+    <Compile Include="Logging\RequestLoggingMiddleware.fs" />
     <Compile Include="Security\Authentication.fs" />
     <Compile Include="Database\DbContext.fs" />
     <Compile Include="Domains\Administracao.fs" />
@@ -39,9 +52,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Sql\0001_init.sql" />
-    <Content Include="appsettings.Production.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Folder Include="DSLs\" />
   </ItemGroup>
 </Project>

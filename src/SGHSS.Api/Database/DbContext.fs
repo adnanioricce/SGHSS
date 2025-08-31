@@ -6,7 +6,7 @@ open Npgsql.FSharp
 module DbConnection =
     let getConnectionString () = 
         let envVar = Environment.GetEnvironmentVariable("CONNECTION_STRING") 
-        if System.String.IsNullOrWhiteSpace(envVar) then "Host=localhost;Username=postgres;Password=senha;Database=sghss" else envVar
+        if System.String.IsNullOrWhiteSpace(envVar) then "Host=localhost;Port=5532;Username=postgres;Password=senha;Database=sghss;Include Error Detail=true" else envVar
     
     let getConnection () = getConnectionString () |> Sql.connect
     

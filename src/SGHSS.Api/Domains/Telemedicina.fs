@@ -2,6 +2,8 @@
 
 open System
 open Infrastructure.Database
+open SGHSS.Api
+open SGHSS.Api.Logging
 
 module Models =
     type StatusSessao = 
@@ -391,16 +393,17 @@ module Repository =
         task {
             let token = gerarTokenSessao()
             let senhaPaciente = gerarSenhaPaciente()
-            
+            // TODO: Criar uma lógica para gerar uma sessão em alguma solução self hosted.
+            let linkSessao = sprintf "http://localhost:58078/api/v1/sessao/%s" (Guid.NewGuid().ToString())
             let! sessaoId =
                 DbConnection.getConnectionString()
                 |> Sql.connect
                 |> Sql.query """
                     INSERT INTO sessoes_telemedicina 
-                    (agendamento_id, paciente_id, profissional_id, token_acesso, senha_paciente,
+                    (agendamento_id, paciente_id, profissional_id, token_acesso,senha_paciente,link_sessao,
                      gravacao_permitida, plataforma_video, observacoes_finais)
                     VALUES 
-                    (@agendamento_id, @paciente_id, @profissional_id, @token_acesso, @senha_paciente,
+                    (@agendamento_id, @paciente_id, @profissional_id, @token_acesso,@senha_paciente, @link_sessao,
                      @gravacao_permitida, @plataforma_video, @observacoes_finais)
                     RETURNING id
                 """
@@ -413,6 +416,7 @@ module Repository =
                     "gravacao_permitida", Sql.bool input.GravacaoPermitida
                     "plataforma_video", Sql.string input.PlataformaVideo
                     "observacoes_finais", Sql.stringOrNone input.ObservacoesIniciais
+                    "link_sessao", Sql.string linkSessao
                 ]
                 |> Sql.executeRowAsync (fun read -> read.int "id")
 
@@ -928,14 +932,14 @@ module Handler =
         DataCriacao: DateTime
         MotivoCancel: string option
     }
-
+    [<CLIMutable>]
     type SessaoTelemedicinInputDto = {
         AgendamentoId: int
         PacienteId: int
         ProfissionalId: int
         GravacaoPermitida: bool
         PlataformaVideo: string
-        ObservacoesIniciais: string option
+        ObservacoesIniciais: string
     }
 
     type EntrarSessaoDto = {
@@ -1010,7 +1014,7 @@ module Handler =
             ProfissionalId = dto.ProfissionalId
             GravacaoPermitida = dto.GravacaoPermitida
             PlataformaVideo = dto.PlataformaVideo
-            ObservacoesIniciais = dto.ObservacoesIniciais
+            ObservacoesIniciais = dto.ObservacoesIniciais |> Utils.toOptionStrIfNull
         }
 
     let private toConfigDomainInput (dto: ConfiguracaoTelemedicinDto) : ConfiguracaoTelemedicinInput =
@@ -1163,13 +1167,13 @@ module Handler =
                     else
                         let domainInput = toDomainInput inputDto
                         let! id = Repository.insert domainInput
-                        
+                        Logger.logger.Information("Sessão com Id = {id} foi criada!",id)
                         // Buscar a sessão criada para retornar os dados completos
                         let! sessao = Repository.getById id
                         let response = {| 
                             id = id
                             linkSessao = sessao.LinkSessao
-                            senhaPaciente = sessao.SenhaPaciente
+                            senhaPaciente = sessao.SenhaPaciente |> Option.defaultValue ""
                             message = "Sessão de telemedicina criada com sucesso" 
                         |}
                         
@@ -1177,6 +1181,7 @@ module Handler =
                 with
                 | ex ->
                     let errorResponse = {| error = "Erro ao criar sessão"; details = ex.Message |}
+                    Logger.logger.Error("Erro interno do servidor:{ex}",ex)
                     return! (setStatusCode 500 >=> json errorResponse) next ctx
             }
 

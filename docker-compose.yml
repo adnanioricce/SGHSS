@@ -9,7 +9,7 @@ services:
     # volumes:
     # - ./volumes/app:/app
     environment:
-      - ConnectionStrings__DefaultConnection=Host=localhost;Database=sghss;Username=postgres;Password=senha;Port=5432
+      - ConnectionStrings__DefaultConnection=Host=localhost;Database=sghss;Username=postgres;Password=senha;Port=5432;Include Error Detail=true
       # - ASPNETCORE_ENVIRONMENT=Development
       - CONNECTION_STRING=Host=db;Database=sghss;Username=postgres;Password=senha;Port=5432
       - JWT_SECRET=your-super-secret-jwt-key-here

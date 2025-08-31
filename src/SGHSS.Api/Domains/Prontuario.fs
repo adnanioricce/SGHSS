@@ -1,8 +1,12 @@
 ﻿namespace Domains.Prontuario
 
 open System
+open System.Collections.Generic
 open Infrastructure.Database
-
+open Newtonsoft.Json
+open Newtonsoft.Json.Linq
+open SGHSS.Api.Logging
+open SGHSS.Api
 module Models =
     type TipoAtendimento = 
         | Consulta 
@@ -158,6 +162,9 @@ module Models =
     }
 
 // Prontuario/Repository.fs
+
+open Models
+
 module Repository =
     open Npgsql.FSharp
     open Models
@@ -770,7 +777,34 @@ module Handler =
         Valor: decimal option
         Status: string
     }
-
+    [<CLIMutable>]
+    type PrescricaoInputDto = {
+        Medicamento: string
+        Dosagem: string
+        Frequencia: string
+        Duracao: string
+        Orientacoes: string
+        DataVencimento: Nullable<DateTime>
+    }
+    [<CLIMutable>]
+    type ExameSolicitadoInputDto = {
+        TipoExame: string
+        Descricao: string
+        Urgente: bool
+        Observacoes: string
+        LaboratorioId: Nullable<int>
+    }
+    [<CLIMutable>]
+    type ProcedimentoInputDto = {
+        Nome: string
+        Codigo: string
+        Descricao: string
+        DataRealizacao: DateTime
+        ProfissionalId: int
+        Observacoes: string
+        Valor: Nullable<decimal>
+    }
+    [<CLIMutable>]
     type ProntuarioInputDto = {
         PacienteId: int
         ProfissionalId: int
@@ -778,46 +812,19 @@ module Handler =
         TipoAtendimento: string
         QueixaPrincipal: string
         HistoriaDoencaAtual: string
-        ExameFisico: string option
-        Hipoteses: string list
-        CID10: string option
-        Observacoes: string option
-        PlanoTratamento: string option
-        Seguimento: string option
+        ExameFisico: string
+        Hipoteses: string array
+        CID10: string
+        Observacoes: string
+        PlanoTratamento: string
+        Seguimento: string
         UnidadeId: int
-        AgendamentoId: int option
-        Prescricoes: PrescricaoInputDto list
-        ExamesSolicitados: ExameSolicitadoInputDto list
-        Procedimentos: ProcedimentoInputDto list
+        AgendamentoId: Nullable<int>
+        Prescricoes: PrescricaoInputDto array
+        ExamesSolicitados: ExameSolicitadoInputDto array
+        Procedimentos: ProcedimentoInputDto array
     }
-
-    and PrescricaoInputDto = {
-        Medicamento: string
-        Dosagem: string
-        Frequencia: string
-        Duracao: string
-        Orientacoes: string option
-        DataVencimento: DateTime option
-    }
-
-    and ExameSolicitadoInputDto = {
-        TipoExame: string
-        Descricao: string
-        Urgente: bool
-        Observacoes: string option
-        LaboratorioId: int option
-    }
-
-    and ProcedimentoInputDto = {
-        Nome: string
-        Codigo: string option
-        Descricao: string
-        DataRealizacao: DateTime
-        ProfissionalId: int
-        Observacoes: string option
-        Valor: decimal option
-    }
-
+       
     // Funções auxiliares de conversão
     let private toResponse (prontuario: Prontuario) : ProntuarioResponse =
         let tipoString = 
@@ -902,14 +909,14 @@ module Handler =
             TipoAtendimento = tipo
             QueixaPrincipal = dto.QueixaPrincipal
             HistoriaDoencaAtual = dto.HistoriaDoencaAtual
-            ExameFisico = dto.ExameFisico
-            Hipoteses = dto.Hipoteses
-            CID10 = dto.CID10
-            Observacoes = dto.Observacoes
-            PlanoTratamento = dto.PlanoTratamento
-            Seguimento = dto.Seguimento
+            ExameFisico = dto.ExameFisico |> Utils.toOptionStrIfNull
+            Hipoteses = dto.Hipoteses |> Array.toList
+            CID10 = dto.CID10 |> Utils.toOptionStrIfNull
+            Observacoes = dto.Observacoes |> Utils.toOptionStrIfNull
+            PlanoTratamento = dto.PlanoTratamento |> Utils.toOptionStrIfNull
+            Seguimento = dto.Seguimento |> Utils.toOptionStrIfNull
             UnidadeId = dto.UnidadeId
-            AgendamentoId = dto.AgendamentoId
+            AgendamentoId = dto.AgendamentoId |> Utils.toOptionIfNullable
         }
 
     // Validações
@@ -927,8 +934,10 @@ module Handler =
         
         if String.IsNullOrWhiteSpace(dto.HistoriaDoencaAtual) then
             errors.Add("História da doença atual é obrigatória")
-        
-        if dto.DataAtendimento > DateTime.Now then
+        let dataAtendimento =
+            dto.DataAtendimento
+            // |> Option.defaultValue DateTime.MinValue
+        if dataAtendimento > DateTime.Now then
             errors.Add("Data de atendimento não pode ser no futuro")
         
         if dto.UnidadeId <= 0 then
@@ -939,7 +948,7 @@ module Handler =
         | _ -> errors.Add("Tipo de atendimento inválido")
 
         // Validar prescrições
-        dto.Prescricoes |> List.iteri (fun i prescricao ->
+        dto.Prescricoes |> Array.iteri (fun i prescricao ->
             if String.IsNullOrWhiteSpace(prescricao.Medicamento) then
                 errors.Add($"Prescrição {i+1}: Medicamento é obrigatório")
             if String.IsNullOrWhiteSpace(prescricao.Dosagem) then
@@ -949,7 +958,7 @@ module Handler =
         )
 
         // Validar exames solicitados
-        dto.ExamesSolicitados |> List.iteri (fun i exame ->
+        dto.ExamesSolicitados |> Array.iteri (fun i exame ->
             if String.IsNullOrWhiteSpace(exame.TipoExame) then
                 errors.Add($"Exame {i+1}: Tipo de exame é obrigatório")
             if String.IsNullOrWhiteSpace(exame.Descricao) then
@@ -1013,12 +1022,13 @@ module Handler =
     let createProntuario : HttpHandler =
         fun next ctx ->
             task {
-                try
+                try                    
                     let! inputDto = ctx.BindJsonAsync<ProntuarioInputDto>()
-                    
+                    Logger.logger.Information("Requisição para criação de prontuario: {req}",inputDto) 
                     let validationErrors = validateInput inputDto
                     if not validationErrors.IsEmpty then
                         let errorResponse = {| errors = validationErrors |}
+                        Logger.logger.Information("Requisição para criação de prontuario tem erros de validação: {errors}",validationErrors)
                         return! (setStatusCode 400 >=> json errorResponse) next ctx
                     else
                         let domainInput = toDomainInput inputDto
@@ -1031,8 +1041,8 @@ module Handler =
                                 Dosagem = prescricaoDto.Dosagem
                                 Frequencia = prescricaoDto.Frequencia
                                 Duracao = prescricaoDto.Duracao
-                                Orientacoes = prescricaoDto.Orientacoes
-                                DataVencimento = prescricaoDto.DataVencimento
+                                Orientacoes = prescricaoDto.Orientacoes |> Utils.toOptionStrIfNull
+                                DataVencimento = prescricaoDto.DataVencimento |> Utils.toOptionIfNullable
                             }
                             let! _ = Repository.insertPrescricao prontuarioId prescricaoInput
                             ()
@@ -1043,8 +1053,8 @@ module Handler =
                                 TipoExame = exameDto.TipoExame
                                 Descricao = exameDto.Descricao
                                 Urgente = exameDto.Urgente
-                                Observacoes = exameDto.Observacoes
-                                LaboratorioId = exameDto.LaboratorioId
+                                Observacoes = exameDto.Observacoes |> Utils.toOptionStrIfNull
+                                LaboratorioId = exameDto.LaboratorioId |> Utils.toOptionIfNullable
                             }
                             let! _ = Repository.insertExameSolicitado prontuarioId exameInput
                             ()
@@ -1053,21 +1063,22 @@ module Handler =
                         for procDto in inputDto.Procedimentos do
                             let procInput : ProcedimentoInput = {
                                 Nome = procDto.Nome
-                                Codigo = procDto.Codigo
+                                Codigo = procDto.Codigo |> Utils.toOptionStrIfNull
                                 Descricao = procDto.Descricao
                                 DataRealizacao = procDto.DataRealizacao
                                 ProfissionalId = procDto.ProfissionalId
-                                Observacoes = procDto.Observacoes
-                                Valor = procDto.Valor
+                                Observacoes = procDto.Observacoes |> Utils.toOptionStrIfNull
+                                Valor = procDto.Valor |> Utils.toOptionIfNullable
                             }
                             let! _ = Repository.insertProcedimento prontuarioId procInput
-                            ()
-
+                            ()                        
                         let response = {| id = prontuarioId; message = "Prontuário criado com sucesso" |}
+                        Logger.logger.Information("Prontuario criado: {resp}",response)
                         return! (setStatusCode 201 >=> json response) next ctx
                 with
                 | ex ->
                     let errorResponse = {| error = "Erro ao criar prontuário"; details = ex.Message |}
+                    Logger.logger.Error("Erro interno do servidor: {ex}",ex)
                     return! (setStatusCode 500 >=> json errorResponse) next ctx
             }
 
@@ -1148,8 +1159,8 @@ module Handler =
                             Dosagem = prescricaoDto.Dosagem
                             Frequencia = prescricaoDto.Frequencia
                             Duracao = prescricaoDto.Duracao
-                            Orientacoes = prescricaoDto.Orientacoes
-                            DataVencimento = prescricaoDto.DataVencimento
+                            Orientacoes = prescricaoDto.Orientacoes |> Utils.toOptionStrIfNull
+                            DataVencimento = prescricaoDto.DataVencimento |> Utils.toOptionIfNullable
                         }
                         
                         let! id = Repository.insertPrescricao prontuarioId prescricaoInput
@@ -1196,8 +1207,8 @@ module Handler =
                             TipoExame = exameDto.TipoExame
                             Descricao = exameDto.Descricao
                             Urgente = exameDto.Urgente
-                            Observacoes = exameDto.Observacoes
-                            LaboratorioId = exameDto.LaboratorioId
+                            Observacoes = exameDto.Observacoes |> Utils.toOptionStrIfNull
+                            LaboratorioId = exameDto.LaboratorioId |> Utils.toOptionIfNullable
                         }
                         
                         let! id = Repository.insertExameSolicitado prontuarioId exameInput
@@ -1248,12 +1259,12 @@ module Handler =
                     else
                         let procInput : ProcedimentoInput = {
                             Nome = procDto.Nome
-                            Codigo = procDto.Codigo
+                            Codigo = procDto.Codigo |> Utils.toOptionStrIfNull
                             Descricao = procDto.Descricao
                             DataRealizacao = procDto.DataRealizacao
                             ProfissionalId = procDto.ProfissionalId
-                            Observacoes = procDto.Observacoes
-                            Valor = procDto.Valor
+                            Observacoes = procDto.Observacoes |> Utils.toOptionStrIfNull
+                            Valor = procDto.Valor |> Utils.toOptionIfNullable
                         }
                         
                         let! id = Repository.insertProcedimento prontuarioId procInput

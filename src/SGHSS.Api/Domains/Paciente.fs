@@ -3,6 +3,7 @@ namespace Domains.Paciente
 open System
 open System.Threading.Tasks
 open Infrastructure.Database
+open SGHSS.Api.Logging
 
 module Models =
     type TipoDocumento = | CPF | RG | CNH | Passaporte
@@ -932,7 +933,18 @@ module Handler =
         Telefone: string
         Email: string option
     }
-
+    [<CLIMutable>]
+    type EnderecoInputDto = {
+        Logradouro: string
+        Numero: string
+        Complemento: string option
+        Bairro: string
+        Cidade: string
+        Estado: string
+        CEP: string
+        Pais: string
+    }
+    [<CLIMutable>]
     type PacienteInputDto = {
         Nome: string
         CPF: string
@@ -944,23 +956,13 @@ module Handler =
         Email: string option
         Telefone: string
         TelefoneSecundario: string option
-        Endereco: EnderecoInputDto option
+        Endereco: EnderecoInputDto
         PlanoSaude: string option
         NumeroCarteirinha: string option
         Observacoes: string option
         ContatosEmergencia: ContatoEmergenciaInputDto list
     }
-
-    and EnderecoInputDto = {
-        Logradouro: string
-        Numero: string
-        Complemento: string option
-        Bairro: string
-        Cidade: string
-        Estado: string
-        CEP: string
-        Pais: string option
-    }
+        
 
     and ContatoEmergenciaInputDto = {
         Nome: string
@@ -1044,16 +1046,16 @@ module Handler =
             Email = dto.Email
             Telefone = dto.Telefone
             TelefoneSecundario = dto.TelefoneSecundario
-            Endereco = dto.Endereco |> Option.map (fun e -> {
-                Logradouro = e.Logradouro
-                Numero = e.Numero
-                Complemento = e.Complemento
-                Bairro = e.Bairro
-                Cidade = e.Cidade
-                Estado = e.Estado
-                CEP = e.CEP
-                Pais = e.Pais
-            })
+            Endereco = Some {
+                Logradouro = dto.Endereco.Logradouro
+                Numero = dto.Endereco.Numero
+                Complemento = dto.Endereco.Complemento 
+                Bairro = dto.Endereco.Bairro
+                Cidade = dto.Endereco.Cidade
+                Estado = dto.Endereco.Estado
+                CEP = dto.Endereco.CEP
+                Pais = if System.String.IsNullOrWhiteSpace(dto.Endereco.Pais) then None else dto.Endereco.Pais |> Some
+            }
             PlanoSaude = dto.PlanoSaude
             NumeroCarteirinha = dto.NumeroCarteirinha
             Observacoes = dto.Observacoes
@@ -1110,7 +1112,7 @@ module Handler =
         | _ -> errors.Add("Sexo deve ser M (Masculino), F (Feminino) ou O (Outros)")
 
         // Validate endereco if provided
-        match dto.Endereco with
+        match dto.Endereco |> Some with
         | Some endereco ->
             if String.IsNullOrWhiteSpace(endereco.Logradouro) then
                 errors.Add("Logradouro é obrigatório")
@@ -1157,14 +1159,15 @@ module Handler =
                         match ctx.TryGetQueryStringValue "unidadeId" with
                         | Some idStr -> Int32.TryParse(idStr) |> function | true, id -> Some id | _ -> None
                         | None -> None
-
+                    Logger.logger.Information("Requisição para listar pacientes utilizando paramêtros = {params}: {ex}",{| ativo = ativo;termo = termo; unidadeId = unidadeId; |})
                     let! pacientes = Repository.getAll ativo termo unidadeId
                     let response = pacientes |> List.map toResponse
-                    
+                    Logger.logger.Information("Resposta da Requisição para listar pacientes: {response}",response)
                     return! json response next ctx
                 with
                 | ex ->
                     let errorResponse = {| error = "Erro interno do servidor"; details = ex.Message |}
+                    Logger.logger.Error("Erro interno do servidor: {ex}",ex)
                     return! (setStatusCode 500 >=> json errorResponse) next ctx
             }
 
@@ -1172,9 +1175,10 @@ module Handler =
         fun next ctx ->
             task {
                 try
+                    Logger.logger.Information("Requisição para consultar paciente utilizando paramêtros = {params}: {ex}",{| pacienteId = pacienteId |})
                     let! paciente = Repository.getById pacienteId
                     let response = toResponse paciente
-                    
+                    Logger.logger.Information("Resposta da Requisição para consultar paciente: {response}",response)
                     return! json response next ctx
                 with
                 | :? System.InvalidOperationException ->
@@ -1182,6 +1186,7 @@ module Handler =
                     return! (setStatusCode 404 >=> json errorResponse) next ctx
                 | ex ->
                     let errorResponse = {| error = "Erro interno do servidor"; details = ex.Message |}
+                    Logger.logger.Error("Erro interno do servidor: {ex}",ex)
                     return! (setStatusCode 500 >=> json errorResponse) next ctx
             }
 
@@ -1197,6 +1202,7 @@ module Handler =
                     return! (setStatusCode 404 >=> json errorResponse) next ctx
                 | ex ->
                     let errorResponse = {| error = "Erro interno do servidor"; details = ex.Message |}
+                    Logger.logger.Error("Erro interno do servidor: {ex}",ex)
                     return! (setStatusCode 500 >=> json errorResponse) next ctx
             }
 
@@ -1216,6 +1222,7 @@ module Handler =
                 with
                 | ex ->
                     let errorResponse = {| error = "Erro interno do servidor"; details = ex.Message |}
+                    Logger.logger.Error("Erro interno do servidor: {ex}",ex)
                     return! (setStatusCode 500 >=> json errorResponse) next ctx
             }
 
@@ -1252,6 +1259,7 @@ module Handler =
                 with
                 | ex ->
                     let errorResponse = {| error = "Erro interno do servidor"; details = ex.Message |}
+                    Logger.logger.Error("Erro interno do servidor: {ex}",ex)
                     return! (setStatusCode 500 >=> json errorResponse) next ctx
             }
 
@@ -1259,8 +1267,12 @@ module Handler =
         fun next ctx ->
             task {
                 try
-                    let! inputDto = ctx.BindJsonAsync<PacienteInputDto>()
-                    
+                    let! body = ctx.ReadBodyFromRequestAsync()
+                    Logger.logger.Information("Corpo da requisição recebida para criação de paciente: {body}",body)
+                    // let dto = Newtonsoft.Json.JsonConvert.DeserializeObject<PacienteInputDto>(body,FSharpConverter)
+                    // let! inputDto = ctx.BindJsonAsync<PacienteInputDto>()
+                    let inputDto = Newtonsoft.Json.JsonConvert.DeserializeObject<PacienteInputDto>(body)
+                    Logger.logger.Information("Requisição deserializada: {body}",inputDto)
                     let validationErrors = validateInput inputDto
                     if not validationErrors.IsEmpty then
                         let errorResponse = {| errors = validationErrors |}
@@ -1279,6 +1291,7 @@ module Handler =
                 with
                 | ex ->
                     let errorResponse = {| error = "Erro ao cadastrar paciente"; details = ex.Message |}
+                    Logger.logger.Error("Erro interno do servidor: {ex}",ex)
                     return! (setStatusCode 500 >=> json errorResponse) next ctx
             }
 
@@ -1306,6 +1319,7 @@ module Handler =
                 with
                 | ex ->
                     let errorResponse = {| error = "Erro ao atualizar paciente"; details = ex.Message |}
+                    Logger.logger.Error("Erro interno do servidor: {ex}",ex)
                     return! (setStatusCode 500 >=> json errorResponse) next ctx
             }
 
@@ -1324,6 +1338,7 @@ module Handler =
                 with
                 | ex ->
                     let errorResponse = {| error = "Erro ao desativar paciente"; details = ex.Message |}
+                    Logger.logger.Error("Erro interno do servidor: {ex}",ex)
                     return! (setStatusCode 500 >=> json errorResponse) next ctx
             }
 
@@ -1342,6 +1357,7 @@ module Handler =
                 with
                 | ex ->
                     let errorResponse = {| error = "Erro ao reativar paciente"; details = ex.Message |}
+                    Logger.logger.Error("Erro interno do servidor: {ex}",ex)
                     return! (setStatusCode 500 >=> json errorResponse) next ctx
             }
 
@@ -1354,6 +1370,7 @@ module Handler =
                 with
                 | ex ->
                     let errorResponse = {| error = "Erro ao obter histórico médico"; details = ex.Message |}
+                    Logger.logger.Error("Erro interno do servidor: {ex}",ex)
                     return! (setStatusCode 500 >=> json errorResponse) next ctx
             }
 

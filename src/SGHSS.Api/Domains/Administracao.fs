@@ -2,6 +2,8 @@
 
 open System
 open Infrastructure.Database
+open Microsoft.Extensions.Logging
+open SGHSS.Api
 
 module Models =
     // Unidades
@@ -1357,7 +1359,7 @@ module Repository =
 module Handler =
     open Giraffe    
     open Models
-
+    type AdministracaoApi = Unit
     // DTOs
     type UnidadeResponse = {
         Id: int
@@ -1799,6 +1801,8 @@ module Handler =
                     return! json response next ctx
                 with
                 | ex ->
+                    let loggerA = ctx.GetLogger<AdministracaoApi>()
+                    loggerA.LogError("Um erro ocorreu ao consultar todas as unidades {ex}",ex)
                     let errorResponse = {| error = "Erro interno do servidor"; details = ex.Message |}
                     return! (setStatusCode 500 >=> json errorResponse) next ctx
             }
@@ -1816,6 +1820,8 @@ module Handler =
                     let errorResponse = {| error = "Unidade não encontrada" |}
                     return! (setStatusCode 404 >=> json errorResponse) next ctx
                 | ex ->
+                    let loggerA = ctx.GetLogger<AdministracaoApi>()
+                    loggerA.LogError("Um erro ocorreu ao consultar todas as unidades {ex}",ex)
                     let errorResponse = {| error = "Erro interno do servidor"; details = ex.Message |}
                     return! (setStatusCode 500 >=> json errorResponse) next ctx
             }
@@ -1829,6 +1835,8 @@ module Handler =
                     let validationErrors = validateUnidadeInput inputDto
                     if not validationErrors.IsEmpty then
                         let errorResponse = {| errors = validationErrors |}
+                        let loggerA = ctx.GetLogger<AdministracaoApi>()
+                        loggerA.LogError("Um erro de validação ocorreu na requisição: {errorResponse}",errorResponse)
                         return! (setStatusCode 400 >=> json errorResponse) next ctx
                     else
                         let domainInput = toUnidadeDomainInput inputDto
@@ -1838,6 +1846,8 @@ module Handler =
                         return! (setStatusCode 201 >=> json response) next ctx
                 with
                 | ex ->
+                    let loggerA = ctx.GetLogger<AdministracaoApi>()
+                    loggerA.LogError("Um erro inesperado ocorreu na requisição: {ex}",ex)
                     let errorResponse = {| error = "Erro ao criar unidade"; details = ex.Message |}
                     return! (setStatusCode 500 >=> json errorResponse) next ctx
             }
@@ -1985,7 +1995,7 @@ module Handler =
         fun next ctx ->
             task {
                 try                    
-                    let! statusDto = ctx.BindJsonAsync<{| status: string; observacoes: string option |}>()
+                    let! statusDto = ctx.BindJsonAsync<{| status: string; observacoes: string |}>()
                     
                     let novoStatus = 
                         match statusDto.status.ToUpper() with
@@ -1996,7 +2006,7 @@ module Handler =
                         | "BLOQUEADO" -> Bloqueado
                         | _ -> failwith $"Status de leito inválido: {statusDto.status}"
 
-                    let! success = Repository.updateStatusLeito leitoId novoStatus statusDto.observacoes
+                    let! success = Repository.updateStatusLeito leitoId novoStatus (statusDto.observacoes |> Utils.toOptionStrIfNull)
                     
                     if success then
                         let response = {| message = $"Status do leito alterado para {statusDto.status}" |}
