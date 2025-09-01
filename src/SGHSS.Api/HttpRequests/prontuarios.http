@@ -1,0 +1,81 @@
+### Get All Medical Records
+GET {{BASE_URL}}/prontuarios
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Get Medical Records with Pagination
+GET {{BASE_URL}}/prontuarios?page=1&limit=10
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Get Medical Records by Patient
+GET {{BASE_URL}}/prontuarios?pacienteId=1
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Get Medical Record by ID
+GET {{BASE_URL}}/prontuarios/1
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Get Medical Records by Patient ID
+GET {{BASE_URL}}/prontuarios/paciente/1
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Create New Medical Record
+POST {{BASE_URL}}/prontuarios
+Content-Type: application/json
+Authorization: Bearer {{AUTH_TOKEN}}
+
+{
+  "pacienteId": 1,
+  "profissionalId": 1,
+  "dataConsulta": "2025-08-31T14:00:00",
+  "queixaPrincipal": "Dor de cabeça intensa há 3 dias",
+  "historiaAtual": "Paciente relata cefaleia intensa, pulsátil, iniciada há 3 dias...",
+  "exameFisico": "Paciente consciente, orientado, PA: 120/80mmHg, FC: 78bpm...",
+  "hipoteseDiagnostica": "Cefaleia tensional",
+  "conduta": "Repouso, analgésico, retorno em 7 dias",
+  "observacoes": "Paciente orientado sobre sinais de alarme",
+  "prescricoes": [
+    {
+      "medicamento": "Dipirona 500mg",
+      "dosagem": "1 comprimido",
+      "frequencia": "8/8 horas",
+      "duracao": "3 dias",
+      "instrucoes": "Tomar com água, após as refeições"
+    }
+  ],
+  "examesSolicitados": [
+    {
+      "tipoExame": "HEMOGRAMA",
+      "descricao": "Hemograma completo",
+      "urgente": false,
+      "observacoes": "Jejum de 8 horas",
+      "laboratorioId": 1
+    }
+  ],
+  "procedimentos": [
+    {
+      "nome": "Consulta médica",
+      "codigo": "03.01.01.001-2",
+      "descricao": "Consulta médica em atenção especializada",
+      "dataRealizacao": "2025-08-31T14:00:00",
+      "profissionalId": 1,
+      "valor": 150.00
+    }
+  ]
+}
+
+### Update Medical Record
+PUT {{BASE_URL}}/prontuarios/1
+Content-Type: application/json
+Authorization: Bearer {{AUTH_TOKEN}}
+
+{
+  "pacienteId": 1,
+  "profissionalId": 1,
+  "dataConsulta": "2025-08-31T14:00:00",
+  "queixaPrincipal": "Dor de cabeça intensa há 3 dias - melhorou",
+  "historiaAtual": "Paciente relata melhora da cefaleia após medicação...",
+  "exameFisico": "Paciente consciente, orientado, PA: 120/80mmHg, FC: 78bpm...",
+  "hipoteseDiagnostica": "Cefaleia tensional - respondendo ao tratamento",
+  "conduta": "Manter medicação, retorno em 7 dias",
+  "observacoes": "Paciente apresenta melhora significativa"
+}

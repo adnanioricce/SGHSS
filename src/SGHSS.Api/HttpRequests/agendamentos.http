@@ -1,0 +1,80 @@
+### Get All Appointments
+GET {{BASE_URL}}/agendamentos
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Get All Appointments with Pagination
+GET {{BASE_URL}}/agendamentos?page=1&limit=10
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Get Appointment by ID
+GET {{BASE_URL}}/agendamentos/1
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Get Appointment Details
+GET {{BASE_URL}}/agendamentos/1/detalhes
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Get Appointments by Patient
+GET {{BASE_URL}}/agendamentos/paciente/1
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Get Appointments by Professional
+GET {{BASE_URL}}/agendamentos/profissional/1
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Check Professional Availability
+GET {{BASE_URL}}/agendamentos/profissional/1/disponibilidade?dataHora=2025-09-01T14:00:00&duracao=01:00
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Create New Appointment
+POST {{BASE_URL}}/agendamentos
+Content-Type: application/json
+Authorization: Bearer {{AUTH_TOKEN}}
+
+{
+  "pacienteId": 1,
+  "profissionalId": 1,
+  "tipoAgendamento": "CONSULTA",
+  "dataHora": "2025-09-01T14:00:00",
+  "duracao": "01:00",
+  "unidadeId": 1,
+  "observacoes": "Consulta de rotina",
+  "planoSaudeCobertura": true
+}
+
+### Update Appointment
+PUT {{BASE_URL}}/agendamentos/1
+Content-Type: application/json
+Authorization: Bearer {{AUTH_TOKEN}}
+
+{
+  "pacienteId": 1,
+  "profissionalId": 1,
+  "tipoAgendamento": "CONSULTA",
+  "dataHora": "2025-09-01T15:00:00",
+  "duracao": "01:00",
+  "unidadeId": 1,
+  "observacoes": "Consulta de rotina - reagendada",
+  "planoSaudeCobertura": true
+}
+
+### Update Appointment Status
+PUT {{BASE_URL}}/agendamentos/1/status
+Content-Type: application/json
+Authorization: Bearer {{AUTH_TOKEN}}
+
+{
+  "status": "CONFIRMADO"
+}
+
+### Confirm Appointment
+POST {{BASE_URL}}/agendamentos/1/confirmar
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Mark as Completed
+POST {{BASE_URL}}/agendamentos/1/realizar
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Cancel Appointment
+DELETE {{BASE_URL}}/agendamentos/1
+Authorization: Bearer {{AUTH_TOKEN}}

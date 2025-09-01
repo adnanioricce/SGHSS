@@ -2,3 +2,90 @@ GET https://localhost:58078/api/v1/pacientes
 #Lembre de colocar o bearer token aqui
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjMiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiQWRtaW5pc3RyYWRvciBkbyBTaXN0ZW1hIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvZW1haWxhZGRyZXNzIjoiYWRtaW5Ac2doc3MuY29tIiwidW5pZGFkZV9pZCI6Ii0xIiwicHJvZmlzc2lvbmFsX2lkIjoiLTEiLCJwYWNpZW50ZV9pZCI6Ii0xIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW5pc3RyYWRvciIsImV4cCI6MTc1NjY2Njg2OSwiaXNzIjoiU0dIU1MuQXBpIiwiYXVkIjoiU0dIU1MuQ2xpZW50In0.IeoTpBufk4eHUVGL7ndYEJWDx1yEldQQq3Whh9GLDAk
 
+### Get All Patients
+GET {{BASE_URL}}/pacientes
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Get All Patients with Pagination
+GET {{BASE_URL}}/pacientes?page=1&limit=10
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Search Patients
+GET {{BASE_URL}}/pacientes?search=João
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Get Patient by ID
+GET {{BASE_URL}}/pacientes/1
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Create New Patient
+POST {{BASE_URL}}/pacientes
+Content-Type: application/json
+Authorization: Bearer {{AUTH_TOKEN}}
+
+{
+  "nome": "João Silva",
+  "cpf": "12345678901",
+  "rg": "123456789",
+  "dataNascimento": "1990-05-15T00:00:00",
+  "sexo": "M",
+  "estadoCivil": "Solteiro",
+  "profissao": "Engenheiro",
+  "email": "joao.silva@email.com",
+  "telefone": "11999887766",
+  "telefoneSecundario": "1133334444",
+  "endereco": {
+    "logradouro": "Rua das Flores",
+    "numero": "123",
+    "complemento": "Apto 45",
+    "bairro": "Centro",
+    "cidade": "São Paulo",
+    "estado": "SP",
+    "cep": "01234567",
+    "pais": "Brasil"
+  },
+  "contatoEmergencia": {
+    "nome": "Maria Silva",
+    "parentesco": "Esposa",
+    "telefone": "11888776655",
+    "email": "maria.silva@email.com"
+  },
+  "planoSaude": "Amil",
+  "numeroCarteirinha": "123456789",
+  "observacoes": "Paciente com histórico de alergias"
+}
+
+### Update Patient
+PUT {{BASE_URL}}/pacientes/1
+Content-Type: application/json
+Authorization: Bearer {{AUTH_TOKEN}}
+
+{
+  "nome": "João Silva Santos",
+  "cpf": "12345678901",
+  "rg": "123456789",
+  "dataNascimento": "1990-05-15T00:00:00",
+  "sexo": "M",
+  "estadoCivil": "Casado",
+  "profissao": "Engenheiro Senior",
+  "email": "joao.santos@email.com",
+  "telefone": "11999887766",
+  "telefoneSecundario": "1133334444",
+  "endereco": {
+    "logradouro": "Rua das Flores",
+    "numero": "123",
+    "complemento": "Apto 45",
+    "bairro": "Centro",
+    "cidade": "São Paulo",
+    "estado": "SP",
+    "cep": "01234567",
+    "pais": "Brasil"
+  },
+  "planoSaude": "Amil Premium",
+  "numeroCarteirinha": "123456789",
+  "observacoes": "Paciente com histórico de alergias. Atualizado."
+}
+
+### Delete Patient
+DELETE {{BASE_URL}}/pacientes/1
+Authorization: Bearer {{AUTH_TOKEN}}

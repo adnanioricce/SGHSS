@@ -1,0 +1,51 @@
+### Get All Professionals
+GET {{BASE_URL}}/profissionais
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Get Professional by ID
+GET {{BASE_URL}}/profissionais/1
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Get Professionals by Type
+GET {{BASE_URL}}/profissionais/tipo/MEDICO
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Create New Professional
+POST {{BASE_URL}}/profissionais
+Content-Type: application/json
+Authorization: Bearer {{AUTH_TOKEN}}
+
+{
+  "nome": "Dr. Carlos Mendes",
+  "cpf": "98765432100",
+  "crm": "CRM123456",
+  "tipoProfissional": "MEDICO",
+  "especialidade": "Cardiologia",
+  "email": "carlos.mendes@hospital.com",
+  "telefone": "11988776655",
+  "dataAdmissao": "2025-01-15T00:00:00",
+  "unidadeId": 1,
+  "permiteTelemedicina": true
+}
+
+### Update Professional
+PUT {{BASE_URL}}/profissionais/1
+Content-Type: application/json
+Authorization: Bearer {{AUTH_TOKEN}}
+
+{
+  "nome": "Dr. Carlos Mendes Silva",
+  "cpf": "98765432100",
+  "crm": "CRM123456",
+  "tipoProfissional": "MEDICO",
+  "especialidade": "Cardiologia Intervencionista",
+  "email": "carlos.mendes@hospital.com",
+  "telefone": "11988776655",
+  "dataAdmissao": "2025-01-15T00:00:00",
+  "unidadeId": 1,
+  "permiteTelemedicina": true
+}
+
+### Delete Professional
+DELETE {{BASE_URL}}/profissionais/1
+Authorization: Bearer {{AUTH_TOKEN}}

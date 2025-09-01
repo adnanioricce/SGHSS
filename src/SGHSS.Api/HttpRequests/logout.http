@@ -1,0 +1,3 @@
+### Logout
+POST {{BASE_URL}}/logout
+Authorization: Bearer {{AUTH_TOKEN}}

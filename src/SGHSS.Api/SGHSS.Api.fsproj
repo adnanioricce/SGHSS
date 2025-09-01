@@ -45,6 +45,18 @@
     <Compile Include="Domains\Profissional.fs" />
     <Compile Include="Domains/Paciente.fs" />
     <Compile Include="Program.fs" />
+    <Content Include="HttpRequests\http-client.env.json" />
+    <Content Include="HttpRequests\logout.http" />
+    <Content Include="HttpRequests\agendamentos.http" />
+    <Content Include="HttpRequests\prontuarios.http" />
+    <Content Include="HttpRequests\prescricoes.http" />
+    <Content Include="HttpRequests\exames.http" />
+    <Content Include="HttpRequests\procedimentos.http" />
+    <Content Include="HttpRequests\profissionais.http" />
+    <Content Include="HttpRequests\telemedicina.http" />
+    <Content Include="HttpRequests\administracao.http" />
+    <Content Include="HttpRequests\usuarios.http" />
+    <Content Include="HttpRequests\relatorios.http" />
   </ItemGroup>
   <ItemGroup>
     <None Include="web.config" CopyToOutputDirectory="PreserveNewest" />
@@ -63,5 +75,7 @@
     <Content Include="HttpRequests\refreshToken.http" />
     <Content Include="HttpRequests\creds.json" />
     <Folder Include="HttpRequests\Auth\" />
+    <Content Include="HttpRequests\.env" />
+    <Content Include="HttpRequests\profile.http" />
   </ItemGroup>
 </Project>

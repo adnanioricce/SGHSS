@@ -1,0 +1,66 @@
+### Get Admin Dashboard
+GET {{BASE_URL}}/admin/dashboard
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Get Hospital Units
+GET {{BASE_URL}}/admin/unidades
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Create Hospital Unit
+POST {{BASE_URL}}/admin/unidades
+Content-Type: application/json
+Authorization: Bearer {{AUTH_TOKEN}}
+
+{
+  "nome": "Unidade Centro",
+  "endereco": {
+    "logradouro": "Av. Paulista",
+    "numero": "1000",
+    "bairro": "Bela Vista",
+    "cidade": "São Paulo",
+    "estado": "SP",
+    "cep": "01310100",
+    "pais": "Brasil"
+  },
+  "telefone": "1133334444",
+  "email": "centro@hospital.com",
+  "capacidadeLeitos": 50
+}
+
+### Get Bed Details
+GET {{BASE_URL}}/admin/leitos/detalhes
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Update Bed Status
+PUT {{BASE_URL}}/admin/leitos/1/status
+Content-Type: application/json
+Authorization: Bearer {{AUTH_TOKEN}}
+
+{
+  "status": "OCUPADO",
+  "pacienteId": 1,
+  "dataOcupacao": "2025-08-31T08:00:00"
+}
+
+### Get Supplies
+GET {{BASE_URL}}/admin/suprimentos
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Update Supply Stock
+PUT {{BASE_URL}}/admin/suprimentos/1/estoque
+Content-Type: application/json
+Authorization: Bearer {{AUTH_TOKEN}}
+
+{
+  "quantidade": 100,
+  "motivoAjuste": "Reposição de estoque",
+  "funcionarioId": 1
+}
+
+### Get Financial Reports
+GET {{BASE_URL}}/admin/relatorios/financeiro?dataInicio=2025-08-01&dataFim=2025-08-31
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Get Appointment Statistics
+GET {{BASE_URL}}/admin/relatorios/agendamentos?periodo=MENSAL&ano=2025&mes=8
+Authorization: Bearer {{AUTH_TOKEN}}

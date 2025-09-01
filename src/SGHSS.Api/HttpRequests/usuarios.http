@@ -1,0 +1,39 @@
+### Create System User
+POST {{BASE_URL}}/usuarios
+Content-Type: application/json
+Authorization: Bearer {{AUTH_TOKEN}}
+
+{
+  "nome": "Admin Sistema",
+  "email": "admin@hospital.com",
+  "senha": "admin123",
+  "roles": ["ADMIN", "USUARIO"],
+  "unidadeId": 1,
+  "profissionalId": null,
+  "pacienteId": null
+}
+
+### Get All Users
+GET {{BASE_URL}}/usuarios
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Get User by ID
+GET {{BASE_URL}}/usuarios/1
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Update User
+PUT {{BASE_URL}}/usuarios/1
+Content-Type: application/json
+Authorization: Bearer {{AUTH_TOKEN}}
+
+{
+  "nome": "Admin Sistema Principal",
+  "email": "admin@hospital.com",
+  "roles": ["ADMIN", "USUARIO", "SUPER_ADMIN"],
+  "unidadeId": 1,
+  "ativo": true
+}
+
+### Deactivate User
+DELETE {{BASE_URL}}/usuarios/1
+Authorization: Bearer {{AUTH_TOKEN}}

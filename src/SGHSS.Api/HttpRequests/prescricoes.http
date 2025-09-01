@@ -1,0 +1,13 @@
+### Add Prescription to Medical Record
+POST {{BASE_URL}}/prontuarios/1/prescricoes
+Content-Type: application/json
+Authorization: Bearer {{AUTH_TOKEN}}
+
+{
+  "medicamento": "Ibuprofeno 600mg",
+  "dosagem": "1 comprimido",
+  "frequencia": "8/8 horas",
+  "duracao": "5 dias",
+  "instrucoes": "Tomar após as refeições com bastante água",
+  "observacoes": "Evitar uso prolongado"
+}

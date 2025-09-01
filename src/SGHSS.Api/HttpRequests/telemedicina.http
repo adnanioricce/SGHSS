@@ -1,0 +1,56 @@
+### Get Telemedicine Dashboard
+GET {{BASE_URL}}/telemedicina/dashboard
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Get Professional Telemedicine Settings
+GET {{BASE_URL}}/telemedicina/profissional/1/configuracoes
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Update Professional Telemedicine Settings
+PUT {{BASE_URL}}/telemedicina/profissional/1/configuracoes
+Content-Type: application/json
+Authorization: Bearer {{AUTH_TOKEN}}
+
+{
+  "permiteTelemedicina": true,
+  "horariosDisponiveis": [
+    {
+      "diaSemana": "SEGUNDA",
+      "horaInicio": "08:00",
+      "horaFim": "12:00"
+    },
+    {
+      "diaSemana": "TERCA",
+      "horaInicio": "14:00",
+      "horaFim": "18:00"
+    }
+  ],
+  "valorConsulta": 200.00
+}
+
+### Create Telemedicine Session
+POST {{BASE_URL}}/telemedicina/sessoes
+Content-Type: application/json
+Authorization: Bearer {{AUTH_TOKEN}}
+
+{
+  "agendamentoId": 1,
+  "pacienteId": 1,
+  "profissionalId": 1,
+  "inicioSessao": "2025-09-01T14:00:00",
+  "duracaoEstimada": "00:30"
+}
+
+### Get Telemedicine Sessions
+GET {{BASE_URL}}/telemedicina/sessoes
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### End Telemedicine Session
+POST {{BASE_URL}}/telemedicina/sessoes/1/finalizar
+Content-Type: application/json
+Authorization: Bearer {{AUTH_TOKEN}}
+
+{
+  "observacoes": "Consulta realizada com sucesso via telemedicina",
+  "duracaoReal": "00:35"
+}

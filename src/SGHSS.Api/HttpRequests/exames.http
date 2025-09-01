@@ -1,0 +1,22 @@
+### Add Exam Request to Medical Record
+POST {{BASE_URL}}/prontuarios/1/exames
+Content-Type: application/json
+Authorization: Bearer {{AUTH_TOKEN}}
+
+{
+  "tipoExame": "RAIO_X",
+  "descricao": "Raio-X de tórax PA e perfil",
+  "urgente": false,
+  "observacoes": "Investigação de tosse persistente",
+  "laboratorioId": 1
+}
+
+### Add Exam Result
+POST {{BASE_URL}}/prontuarios/exames/1/resultado
+Content-Type: application/json
+Authorization: Bearer {{AUTH_TOKEN}}
+
+{
+  "resultado": "Campos pulmonares livres. Coração normal. Sem alterações patológicas",
+  "arquivoUrl": "https://storage.hospital.com/exames/raio_x_123.pdf"
+}

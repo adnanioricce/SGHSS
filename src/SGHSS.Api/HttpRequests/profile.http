@@ -1,0 +1,7 @@
+### Get User Profile
+GET {{BASE_URL}}/profile
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Get Profile - Alternative format
+GET {{BASE_URL}}/profile
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...

@@ -1,0 +1,19 @@
+### General Dashboard Metrics
+GET {{BASE_URL}}/relatorios/dashboard
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Patient Statistics
+GET {{BASE_URL}}/relatorios/pacientes?periodo=ANUAL&ano=2025
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Professional Performance
+GET {{BASE_URL}}/relatorios/profissionais/performance?profissionalId=1&dataInicio=2025-08-01&dataFim=2025-08-31
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Revenue Report
+GET {{BASE_URL}}/relatorios/receita?dataInicio=2025-08-01&dataFim=2025-08-31
+Authorization: Bearer {{AUTH_TOKEN}}
+
+### Export Data
+GET {{BASE_URL}}/relatorios/export/pacientes?formato=CSV&dataInicio=2025-01-01&dataFim=2025-12-31
+Authorization: Bearer {{AUTH_TOKEN}}

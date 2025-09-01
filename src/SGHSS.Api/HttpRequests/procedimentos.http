@@ -1,0 +1,14 @@
+### Add Procedure to Medical Record
+POST {{BASE_URL}}/prontuarios/1/procedimentos
+Content-Type: application/json
+Authorization: Bearer {{AUTH_TOKEN}}
+
+{
+  "nome": "Eletrocardiograma",
+  "codigo": "02.05.01.001-0",
+  "descricao": "ECG de repouso - 12 derivações",
+  "dataRealizacao": "2025-08-31T14:30:00",
+  "profissionalId": 1,
+  "observacoes": "Exame realizado sem intercorrências",
+  "valor": 80.00
+}
