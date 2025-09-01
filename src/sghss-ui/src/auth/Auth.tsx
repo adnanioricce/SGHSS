@@ -1,5 +1,6 @@
 import React from "react";
 import { apiClient } from "../ApiClient";
+import type { User } from "../models";
 
 export function useApi() {
     const [loading, setLoading] = React.useState(false);
@@ -22,12 +23,36 @@ export function useApi() {
   
     return { call, loading, error };
   }
-    
-  const AuthContext = React.createContext({});
+const login = async (email: string, password: string) => {
+    return apiClient.login(email, password);
+}
+const logout = async () => {
+    return apiClient.logout();
+}
+const sampleUser: User | null = {
+    id: 1,
+    nome: 'John Doe',
+    email: '',
+    role: 'Administrador'
+};
+const initialAuthState = {
+    user: sampleUser as User | null,
+    isAuthenticated: false,
+    loading: false,
+    login: login,
+    logout: logout
+};    
+const AuthContext = React.createContext<{
+    user: User | null;
+    isAuthenticated: boolean;
+    loading: boolean;
+    login: (email: string, password: string) => Promise<any>;
+    logout: () => Promise<void>;
+}>(initialAuthState);
   
 export function AuthProvider(args:any) {
     const { children } = args;
-    const [user, setUser] = React.useState(null);
+    const [user, setUser] = React.useState(sampleUser);
     const [isAuthenticated, setIsAuthenticated] = React.useState(false);
     const [loading, setLoading] = React.useState(true);
     
@@ -72,6 +97,7 @@ export function AuthProvider(args:any) {
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
+
 export function useAuth() {
     const context = React.useContext(AuthContext);
     if (!context) {

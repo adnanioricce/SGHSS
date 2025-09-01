@@ -1,0 +1,159 @@
+# Introdução
+Esse texto documenta a motivação, o design e o processo por trás do desenvolvimento do SGHSS (Sistema de Gestão Hospitalar e de Serviços de Saúde). 
+O SGHSS é uma aplicação web construída com Giraffe (Construido sobre o ASP.NET Core), projetada para gerenciar eficientemente operações hospitalares e serviços de saúde.
+O projeto foi desenvolvido por Adnan Gonzaga como parte do Trabalho da matéria de "Projeto Backend" para a obtenção do grau de Curso Superior de Tecnologia na Universidade Uninter.
+
+# Objetivos do Projeto
+O principal objetivo do SGHSS é fornecer uma plataforma robusta e escalável para a gestão de hospitais e serviços de saúde, em grande parte o projeto existe como um estudo de caso para aplicação de conhecimentos adquiridos ao longo do curso, 
+portanto, o desenvolvimento do SGHSS foca em demonstrar habilidades técnicas e avaliar a viabilidade de certas tecnologias como o F# para sistemas Web.
+
+Ao todo, o sistema inclui funcionalidades como:
+- Gestão de Pacientes: Registro, atualização e visualização de informações dos pacientes.
+- Agendamento de Consultas: Marcação, cancelamento e visualização de consultas médicas.
+- Gestão de Profissionais de Saúde: Cadastro e gerenciamento de médicos, enfermeiros e outros
+
+# Cronograma do projeto
+
+| Fase                     | Descrição                                      | Duração Estimada |
+|-------------------------|------------------------------------------------|------------------|
+| Planejamento            | Definição de requisitos e arquitetura do sistema | 3 dias         |
+| Configuração do Ambiente | Configuração de ferramentas e ambiente de desenvolvimento | 1 semana         |
+| Testes      | Testes unitários, integração | 1 semana        |
+| Desenvolvimento Inicial | Implementação das funcionalidades básicas       | 3 semanas        |
+| Validação      | Validação do sistema | 3 dias        |
+| Documentação            | Criação de documentação técnica e de usuário    | 1 semana         |
+| Revisão Final           | Revisão e ajustes finais                        | 1 semana         |
+
+# Tecnologias Utilizadas
+- Linguagem de Programação: F#
+- Framework Web: Giraffe (baseado em ASP.NET Core)
+- Banco de Dados: PostgreSQL
+- ORM: Dapper
+- Autenticação: JWT (JSON Web Tokens)
+- Containerização: Docker
+- CI/CD: GitHub Actions, Jenkins
+- Deploy: Hetzner Cloud, Docker Registry, Kubernetes, k3s
+- Testes: Expecto
+- Ferramentas de Desenvolvimento: Visual Studio Code, JetBrains Rider, Neovim
+
+# Estrutura do Projeto
+O projeto SGHSS é organizado em vários módulos verticais, cada um responsável por uma parte específica da funcionalidade do sistema. A estrutura do projeto é a seguinte:
+- src/SGHSS.Api: Contém o código da API RESTful construída com Giraffe.
+- src/SGHSS.Api/Domains/Pacientes: Módulo responsável pela gestão de pacientes.
+- src/SGHSS.Api/Domains/Prontuarios: Módulo responsável pela gestão de prontuários médicos.
+- src/SGHSS.Api/Domains/Agendamentos: Módulo responsável pelo agendamento de consultas.
+- src/SGHSS.Api/Domains/Profissional: Módulo responsável pela gestão de profissionais de saúde.
+- src/SGHSS.Api/Security/Authentication: Módulo responsável pela autenticação
+- src/SGHSS.Api/Logging/*: Módulo responsável pelo logging
+- src/SGHSS.Api/Database: Modulos para acesso ao banco de dados
+- tests/SGHSS.Api.IntegrationTests: Testes de E2E para a API(nome do projeto incorreto, deveria ser SGHSS.Api.E2E).
+dentro de cada módulo, o código é organizado em Modelos, Repositorios, Validações, e Request Handlers(não há controllers, Giraffe usa handlers diretamente como uma alternativa para o paradigma funcional).
+- Modelos: Definições de tipos e estruturas de dados.
+- Repositórios: Interação com o banco de dados usando Dapper.
+- Validações: Regras de negócio e validação de dados.
+- Handlers: Lógica para processar requisições HTTP.
+
+# Processo de Desenvolvimento
+O desenvolvimento do SGHSS seguiu uma abordagem iterativa e incremental, com ciclos curtos de desenvolvimento. Cada funcionalidade foi planejada, implementada, testada e revisada antes de ser integrada ao sistema principal.
+
+# Testes/Demonstrações
+
+Para realizar testes recorrentes da aplicação, um projeto com testes E2E foi desenvolvido para garantir que todas as partes do sistema funcionassem corretamente juntas. Scripts de teste automatizados foram criados para validar as principais funcionalidades da API, incluindo:
+- Criação, leitura, atualização e exclusão de pacientes.
+- Agendamento e cancelamento de consultas.
+- Autenticação e autorização de usuários.
+- Testes de carga para avaliar o desempenho sob diferentes condições.
+Segue abaixo os prints dos testes E2E rodando localmente:
+![Testes E2E rodando localmente](./docs/images/e2e-tests-local.png)
+
+Conforme pedido, segue também os prints de cada um dos testes com suas requisições e respostas:
+
+- Teste de criação de paciente:
+![Teste de criação de paciente](./docs/images/e2e-create-paciente.png)
+
+- Teste de obtenção de paciente:
+![Teste de obtenção de paciente](./docs/images/e2e-get-paciente.png)
+
+- Teste de atualização de paciente:
+![Teste de atualização de paciente](./docs/images/e2e-update-paciente.png)
+
+- Teste de exclusão de paciente:
+![Teste de exclusão de paciente](./docs/images/e2e-delete-paciente.png)
+
+- Teste de agendamento de consulta:
+![Teste de agendamento de consulta](./docs/images/e2e-schedule-consulta.png)
+
+- Teste de cancelamento de consulta:
+![Teste de cancelamento de consulta](./docs/images/e2e-cancel-consulta.png)
+
+- Teste de obtenção de leitos:
+![Teste de obtenção de leitos](./docs/images/e2e-get-leitos.png)
+
+- Teste de obtenção de profissionais:
+![Teste de obtenção de profissionais](./docs/images/e2e-get-profissionais.png)
+
+
+- Teste de autenticação:
+![Teste de autenticação](./docs/images/e2e-authentication.png)
+
+- Teste de autorização:
+![Teste de autorização](./docs/images/e2e-authorization.png)
+
+- Teste de carga:
+![Teste de carga](./docs/images/e2e-load-test.png)
+
+
+# Pontos de Destaque
+- Uso de F# e Giraffe: A escolha de F# como linguagem principal e Giraffe como framework web foi um ponto crucial do projeto, permitindo a criação de uma aplicação funcional e eficiente. Durante muito tempo, o projeto foi desenvolvido em um único arquivo, sendo incrivelmente produtivo de inicio, permitindo até realizar a separação das camadas em modulos F#, desenhando a aplicação de forma gradual.
+- Tipagem Estática e Funcional: O uso de F# trouxe benefícios significativos em termos de segurança de tipo e expressividade. A tipagem estática aliado a natureza funcional da linguagem, e monadas como Result e Option, ajudaram a reduzir erros comuns e a melhorar a manutenção do código.
+- Modulos testáveis: O paradigma funcional permite padrões de design que facilitam de maneira assustadora os testes automatizados, onde cada função é um bloco de construção independente que pode ser testado isoladamente, que aliado com imutabilidade de dados, funções puras, ausência de efeitos colaterais e injeção de dependência via parâmetros, torna o código altamente testável. A titulo de comparação, em um sistema similar feito em Node.js com Express, a quantidade de código necessária para implementar testes unitários e de integração é significativamente maior, devido à natureza imperativa e orientada a objetos do JavaScript, que frequentemente requer mais boilerplate e configuração para isolar componentes e gerenciar estados, enquanto no F#, por vezes nem mesmo criar um mock é necessário, bastando passar uma função diferente como parâmetro. Essa descrição talvez seja muito abstrata, portanto nesse caso deixarei um exemplo simples de um handler que depende de um repositório, e como ele pode ser testado facilmente:
+```fsharp
+// Handler que depende de um repositório
+let getPacienteHandler (getPacienteById: GetPacienteById) (next: HttpFunc) (ctx: HttpContext) =
+    task {
+        let pacienteId = ctx.GetRouteValue("id") :?> string
+        match! getPacienteById(pacienteId) with
+        | Some paciente -> return! json paciente next ctx
+        | None -> return! RequestErrors.NOT_FOUND "Paciente não encontrado" next ctx
+    }
+// Teste unitário do handler
+let testGetPacienteHandler () =
+    let getPacienteByIdAsync id =
+        if id = "123" then Task.FromResult(Some { Id = "123"; Nome = "João" })
+        else Task.FromResult(None)
+    let ctx = // criar um HttpContext de teste com o id "123"
+    let result = getPacienteHandler mockRepo (fun _ _ -> Task.FromResult(Some ctx)) ctx
+    // Asserções para verificar o resultado
+```
+- Adoção de Dapper: A escolha do Dapper como ORM foi motivada pela sua simplicidade e desempenho. Ele se integra bem com F# e permite um controle mais direto sobre as consultas SQL. O mesmo é tanto uma questão própria do F#, onde tanto a filosofia quanto a comunidade, tendem a preferir soluções mais leves e diretas, quanto uma questão de ferramental existente, onde o Entity Framework Core, apesar de ser a escolha mais comum no ecossistema .NET, não possui suporte oficial para F#, e sua integração com a linguagem é limitada, o que pode levar a desafios adicionais no desenvolvimento. Outro ponto, é que o paradigma funcional tende a favorecer abordagens mais explícitas e controladas para o acesso a dados, o que se alinha bem com a filosofia do Dapper.
+- Containerização com Docker: Foi imprescindivel, sem ele seria muito mais dificil testar o deploy da aplicação, conseguir uma maneira de distribuir a aplicação e implanta-la em servidores linux, e também para criar ambientes de desenvolvimento consistentes. O desenvolvedor em questão precisou trabalhar no projeto em diferentes computadores, e precisa de uma solução que pudesse ser implantada em VPS privados, e fosse uma alternativa para rodar testes E2E da aplicação e o Docker foi a solução perfeita.
+- CI/CD: A implementação de pipelines de CI/CD com GitHub Actions e Jenkins automatizou o processo de build, testes e deploy, aumentando a eficiência do desenvolvimento. Isso aliado a evolução gradual do projeto fez o projeto ir se desenvolvendo de maneira gradual, quase sem grandes correções.
+- Testes Automatizados: A inclusão de testes automatizados com Expecto garantiu a qualidade do código e a confiabilidade do sistema.
+- Kubernetes com k3s: A utilização de Kubernetes (k3s) para orquestração de containers, proporcionou em certa dose uma facilidade no desenho da arquitetura de deploy, e uma melhor visão da distribuição dos serviços. Se em um cenário de cloud real, eu pensaria em utilizar um S3 compatível para armazenar arquivos, como o MinIO, e um banco de dados gerenciado, como o Amazon RDS, em um cenário local, o MinIO pode ser hospedado em um container dentro do cluster k3s, e o PostgreSQL pode ser executado em um pod separado, ambos gerenciados pelo Kubernetes. Isso permite uma configuração mais simples e integrada, facilitando o desenvolvimento e testes locais.
+
+# Desafios e Soluções
+Durante o desenvolvimento do SGHSS, vários desafios foram enfrentados, incluindo:
+- Adaptação de modelos imperativos para um paradigma funcional: A linguagem F# e o framework Giraffe exigem uma mudança de mentalidade, mas o maior desafio é lidar com bibliotecas e ferramentas que são predominantemente orientadas a objetos. Um problema simples, mas que pode tomar tempo, é o tratamento de nulos nas extremidades da aplicação, como em requisições HTTP e respostas do banco de dados, o tipo option não é facilmente serializavel pelas ferramentas comuns utilizadas no .NET, e não é algo comum em APIs REST, portanto, é necessário sacrificar alguns ganhos do paradigma funcional para manter a interoperabilidade.
+- Falta de documentação e exemplos: A documentação do Giraffe tem uma situação peculiar: é uma versão incrivelmente simples do ASP.NET Core(com outra ainda mais simples chamada Suave), com toda a sua documentação em um único arquivo, sendo esse um dos pontos mais positivos do framework, onde é necessário muito pouco para fazer algo funcional, mas ao mesmo tempo, a falta de exemplos e tutoriais torna difícil para iniciantes. A solução foi estudar o código-fonte do Giraffe, examinar projetos de código aberto que utilizam o framework, e limitar o escopo do projeto para algo que pudesse ser alcançado com o conhecimento disponível.
+- Configuração de CI/CD: A configuração de pipelines de CI/CD para um projeto F#/Giraffe não é tão direta quanto para projetos mais comuns como Node.js ou Python. A solução foi utilizar do Docker e Jenkins para criar um ambiente de build consistente, e utilizar GitHub Actions como uma cola entre o repositório e o Jenkins, que é hospedado em um servidor privado, com o ferramental necessário, com ajuda do Docker para outros cenários.
+- Kubernetes: A dificuldade se apresenta no geral, na manutenção do cluster, e principalmente, na configuração do mesmo em arquivos YAML, que é algo que demanda um certo tempo de experimentação e paciência, e que não é o foco do projeto, portanto,a solução foi uma configuração atual bastante simples, que não contempla aspectos mais avançados como auto-escalonamento, monitoramento ou alta disponibilidade.
+
+
+
+# Resultados e Conclusão
+O SGHSS é um sistema funcional que demonstra a viabilidade do uso de F# e Giraffe para o desenvolvimento de aplicações web robustas. O sistema atende aos requisitos iniciais e fornece uma base sólida para futuras expansões e melhorias.
+
+# Futuras Melhorias
+- Upload de arquivos: Implementação de funcionalidade para upload e gerenciamento de arquivos, como exames e imagens médicas, essa na verdade é uma funcionalidade esssencial para qualquer sistema de gestão hospitalar, onde se tem presente uma gama consideravel de documentos, prescrições, receitas e outros tipos de conteúdo, e que não foi implementada por falta de tempo. O MinIO seria uma solução interessante para isso.
+- Notificações: Implementação de um sistema de notificações para lembrar pacientes sobre consultas e outros eventos importantes.
+- Sessão de Streaming de terceiro: Implementação de uma sessão de streaming que tenha como motor uma solução auto-hospedada, como Jitsi Meet, para permitir consultas remotas.
+- Interface de Usuário: Desenvolvimento de uma interface web amigável para usuários finais. Uma interface básica em React foi implementada, mas não é o foco do projeto.
+- Funcionalidades Adicionais: Implementação de funcionalidades adicionais como gestão de inventário, faturamento e relatórios.
+- Escalabilidade: Otimização do sistema para suportar uma maior carga de usuários e dados.
+- Testes Automatizados: Expansão da cobertura de testes automatizados para garantir a qualidade contínua do sistema.
+
+# Agradecimentos
+Agradeço à Universidade Uninter pela oportunidade de desenvolver este projeto como parte do curso de Tecnologia em Análise e Desenvolvimento de Sistemas.
+
+# Contato
+Para mais informações ou para contribuir com o projeto, entre em contato com Adnan Gonzaga através do email adnangonzagadevio@gmail.com

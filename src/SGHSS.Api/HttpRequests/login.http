@@ -1,4 +1,4 @@
-POST https://localhost:58078/auth/login
+POST https://localhost:58078/api/v1/auth/login
 #@SGH_HostAddress=https://localhost:58078
 #Accept: application/json
 Content-Type: application/json
@@ -6,7 +6,7 @@ Content-Type: application/json
 
 {
     "email": "admin@sghss.com",
-    "password": "Admin123!"
+    "password": "Adm12345!"
 }
 
 #Resposta esperada:

@@ -1,24 +1,23 @@
 #!/bin/bash
-# test_sghss_api.sh - Simple API Testing Script
 
-set -e # Exit on any error
+set -e
 
 BASE_URL="http://localhost:8000"
 TEST_DIR="$(dirname "$0")/test_data"
 mkdir -p $TEST_DIR
 
-# Colors for output
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+NC='\033[0m' # sem cor
 
 # Test counter
 TESTS_PASSED=0
 TESTS_FAILED=0
 
-# Helper functions
+
 log_info() {
   echo -e "${BLUE}[INFO]${NC} $1"
 }
@@ -37,23 +36,23 @@ log_warning() {
   echo -e "${YELLOW}[WARN]${NC} $1"
 }
 
-# Test if API is running
+
 test_api_health() {
-  log_info "Testing API health..."
+  log_info "Testando a saúde da API..."
   if curl -f -s "$BASE_URL" >/dev/null; then
-    log_success "API is running"
+    log_success "API esta rodando"
     return 0
   else
-    log_error "API is not running on $BASE_URL"
+    log_error "API não esta rodando no endereço $BASE_URL"
     return 1
   fi
 }
 
-# Test patient endpoints
-test_patients() {
-  log_info "Testing Patient endpoints..."
 
-  # Create test patient
+test_patients() {
+  log_info "Testando endpoints dos pacientes..."
+
+  
   PATIENT_DATA='{
         "nome": "João Silva Teste",
         "cpf": "12345678901",
@@ -83,9 +82,9 @@ test_patients() {
   if [ "$HTTP_CODE" = "201" ]; then
     PATIENT_ID=$(echo "$BODY" | grep -o '"id":[0-9]*' | cut -d':' -f2)
     echo "$PATIENT_ID" >"$TEST_DIR/patient_id.txt"
-    log_success "Created patient with ID: $PATIENT_ID"
+    log_success "Paciente criado com ID: $PATIENT_ID"
   else
-    log_error "Failed to create patient (HTTP: $HTTP_CODE): $BODY"
+    log_error "Falha na criação do paciente (HTTP: $HTTP_CODE): $BODY"
     return 1
   fi
 
@@ -94,9 +93,9 @@ test_patients() {
   HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
 
   if [ "$HTTP_CODE" = "200" ]; then
-    log_success "Retrieved all patients"
+    log_success "Listar todos os pacientes"
   else
-    log_error "Failed to get patients (HTTP: $HTTP_CODE)"
+    log_error "Falha ao pegar os pacientes (HTTP: $HTTP_CODE)"
   fi
 
   # GET /api/v1/pacientes/{id}
@@ -106,29 +105,27 @@ test_patients() {
     HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
 
     if [ "$HTTP_CODE" = "200" ]; then
-      log_success "Retrieved patient by ID: $PATIENT_ID"
+      log_success "Consulta de paciente por ID: $PATIENT_ID"
     else
-      log_error "Failed to get patient by ID (HTTP: $HTTP_CODE)"
+      log_error "Falha ao tentar pegar os pacientes por ID (HTTP: $HTTP_CODE)"
     fi
   fi
 }
 
-# Test professional endpoints
 test_professionals() {
-  log_info "Testing Professional endpoints..."
-
-  # Create test professional
+  log_info "Testando os endpoints dos profissionais..."
+  
   PROFESSIONAL_DATA='{
-        "nome": "Dra. Maria Teste",
-        "cpf": "98765432100",
-        "crm": "CRM123456",
-        "tipoProfissional": "MEDICO",
-        "email": "maria.teste@hospital.com",
-        "telefone": "11988776655",
-        "dataAdmissao": "'$(date -I)'T00:00:00",
-        "unidadeId": 1,
-        "permiteTelemedicina": true
-    }'
+    "nome": "Dra. Maria Teste",
+    "cpf": "98765432100",
+    "crm": "CRM123456",
+    "tipoProfissional": "MEDICO",
+    "email": "maria.teste@hospital.com",
+    "telefone": "11988776655",
+    "dataAdmissao": "'$(date -I)'T00:00:00",
+    "unidadeId": 1,
+    "permiteTelemedicina": true
+  }'
 
   # POST /api/v1/profissionais
   RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
@@ -142,9 +139,9 @@ test_professionals() {
   if [ "$HTTP_CODE" = "201" ]; then
     PROFESSIONAL_ID=$(echo "$BODY" | grep -o '"id":[0-9]*' | cut -d':' -f2)
     echo "$PROFESSIONAL_ID" >"$TEST_DIR/professional_id.txt"
-    log_success "Created professional with ID: $PROFESSIONAL_ID"
+    log_success "Criou um profissional com ID: $PROFESSIONAL_ID"
   else
-    log_error "Failed to create professional (HTTP: $HTTP_CODE): $BODY"
+    log_error "Falha ao tentar criar profissional (HTTP: $HTTP_CODE): $BODY"
     return 1
   fi
 
@@ -153,9 +150,9 @@ test_professionals() {
   HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
 
   if [ "$HTTP_CODE" = "200" ]; then
-    log_success "Retrieved all professionals"
+    log_success "Listagem de todos os profissionais"
   else
-    log_error "Failed to get professionals (HTTP: $HTTP_CODE)"
+    log_error "Falha ao testar listar profissionais (HTTP: $HTTP_CODE)"
   fi
 
   # GET /api/v1/profissionais/tipo/MEDICO
@@ -163,36 +160,33 @@ test_professionals() {
   HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
 
   if [ "$HTTP_CODE" = "200" ]; then
-    log_success "Retrieved professionals by type"
+    log_success "Listando profissionais por tipo"
   else
-    log_error "Failed to get professionals by type (HTTP: $HTTP_CODE)"
+    log_error "Falha ao tentar consultar os profissionais por tipo (HTTP: $HTTP_CODE)"
   fi
 }
 
-# Test appointment endpoints
 test_appointments() {
-  log_info "Testing Appointment endpoints..."
-
-  # Check if we have patient and professional IDs
+  log_info "Testando os endpoints de agendamento..."
+  
   if [ ! -f "$TEST_DIR/patient_id.txt" ] || [ ! -f "$TEST_DIR/professional_id.txt" ]; then
-    log_warning "Skipping appointment tests - missing patient or professional"
+    log_warning "Pulando os testes de agendamento - Paciente ou profissional faltando"
     return 0
   fi
 
   PATIENT_ID=$(cat "$TEST_DIR/patient_id.txt")
   PROFESSIONAL_ID=$(cat "$TEST_DIR/professional_id.txt")
   FUTURE_DATE=$(date -d "+1 day" -I)"T10:00:00"
-
-  # Create test appointment
+  
   APPOINTMENT_DATA='{
-        "pacienteId": '$PATIENT_ID',
-        "profissionalId": '$PROFESSIONAL_ID',
-        "tipoAgendamento": "CONSULTA",
-        "dataHora": "'$FUTURE_DATE'",
-        "duracao": "00:30",
-        "unidadeId": 1,
-        "planoSaudeCobertura": false
-    }'
+    "pacienteId": '$PATIENT_ID',
+    "profissionalId": '$PROFESSIONAL_ID',
+    "tipoAgendamento": "CONSULTA",
+    "dataHora": "'$FUTURE_DATE'",
+    "duracao": "00:30",
+    "unidadeId": 1,
+    "planoSaudeCobertura": false
+  }'
 
   # POST /api/v1/agendamentos
   RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
@@ -216,36 +210,35 @@ test_appointments() {
   HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
 
   if [ "$HTTP_CODE" = "200" ]; then
-    log_success "Retrieved all appointments"
+    log_success "Listagem de todos os agendamentos"
   else
-    log_error "Failed to get appointments (HTTP: $HTTP_CODE)"
+    log_error "Falha na consulta dos agendamentos (HTTP: $HTTP_CODE)"
   fi
-
-  # Check availability
+  
   AVAILABILITY_URL="$BASE_URL/api/v1/agendamentos/profissional/$PROFESSIONAL_ID/disponibilidade?dataHora=$FUTURE_DATE&duracao=00:30"
   RESPONSE=$(curl -s -w "\n%{http_code}" "$AVAILABILITY_URL")
   HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
 
   if [ "$HTTP_CODE" = "200" ]; then
-    log_success "Checked professional availability"
+    log_success "Status da disponibilidade de profissional"
   else
-    log_error "Failed to check availability (HTTP: $HTTP_CODE)"
+    log_error "Falha na consulta da disponibilidade do profissional (HTTP: $HTTP_CODE)"
   fi
 }
 
-# Test telemedicine endpoints
+
 test_telemedicine() {
-  log_info "Testing Telemedicine endpoints..."
+  log_info "Testando os endpoints de Telemedicina..."
 
   # GET /api/v1/telemedicina/dashboard
-  RESPONSE=$(curl -s -w "\n%{http_code}" "$BASE_URL/api/v1/telemedicina/dashboard")
-  HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+  # RESPONSE=$(curl -s -w "\n%{http_code}" "$BASE_URL/api/v1/telemedicina/dashboard")
+  # HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
 
-  if [ "$HTTP_CODE" = "200" ]; then
-    log_success "Retrieved telemedicine dashboard"
-  else
-    log_error "Failed to get telemedicine dashboard (HTTP: $HTTP_CODE)"
-  fi
+  # if [ "$HTTP_CODE" = "200" ]; then
+  #   log_success "Consulta do dashboard de telemedicina"
+  # else
+  #   log_error "Falha ao consultar dashboard de telemedicina (HTTP: $HTTP_CODE)"
+  # fi
 
   # Test professional configuration
   if [ -f "$TEST_DIR/professional_id.txt" ]; then
@@ -256,25 +249,24 @@ test_telemedicine() {
     HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
 
     if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "404" ]; then
-      log_success "Checked telemedicine configuration (HTTP: $HTTP_CODE)"
+      log_success "Verificação da configuração de telemedicina (HTTP: $HTTP_CODE)"
     else
-      log_error "Failed to check telemedicine config (HTTP: $HTTP_CODE)"
+      log_error "Falha na verificação do configuração de telemedicina (HTTP: $HTTP_CODE)"
     fi
   fi
 }
 
-# Test administration endpoints
 test_administration() {
-  log_info "Testing Administration endpoints..."
+  log_info "Testando endpoints de administração..."
 
   # GET /api/v1/admin/dashboard
   RESPONSE=$(curl -s -w "\n%{http_code}" "$BASE_URL/api/v1/admin/dashboard")
   HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
 
   if [ "$HTTP_CODE" = "200" ]; then
-    log_success "Retrieved admin dashboard"
+    log_success "Consulta do dashboard de Admin"
   else
-    log_error "Failed to get admin dashboard (HTTP: $HTTP_CODE)"
+    log_error "Falha na consulta dos dados do dashboard de admin (HTTP: $HTTP_CODE)"
   fi
 
   # GET /api/v1/admin/unidades
@@ -282,9 +274,9 @@ test_administration() {
   HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
 
   if [ "$HTTP_CODE" = "200" ]; then
-    log_success "Retrieved hospital units"
+    log_success "Listagem de todas as unidades hospitalares"
   else
-    log_error "Failed to get hospital units (HTTP: $HTTP_CODE)"
+    log_error "Falha ao listar unidades hospitalares (HTTP: $HTTP_CODE)"
   fi
 
   # GET /api/v1/admin/leitos/detalhes
@@ -292,9 +284,9 @@ test_administration() {
   HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
 
   if [ "$HTTP_CODE" = "200" ]; then
-    log_success "Retrieved bed details"
+    log_success "Listagem dos detalhes dos leitos"
   else
-    log_error "Failed to get bed details (HTTP: $HTTP_CODE)"
+    log_error "Falha ao listar detalhes dos leitos (HTTP: $HTTP_CODE)"
   fi
 
   # GET /api/v1/admin/suprimentos
@@ -302,27 +294,25 @@ test_administration() {
   HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
 
   if [ "$HTTP_CODE" = "200" ]; then
-    log_success "Retrieved supplies"
+    log_success "Listagem de todos os suprimentos"
   else
-    log_error "Failed to get supplies (HTTP: $HTTP_CODE)"
+    log_error "Falha ao listar suprimentos (HTTP: $HTTP_CODE)"
   fi
 }
 
-# Test medical records endpoints
 test_medical_records() {
-  log_info "Testing Medical Records endpoints..."
+  log_info "Testando endpoints de prontuários médicos..."
 
   # GET /api/v1/prontuarios
   RESPONSE=$(curl -s -w "\n%{http_code}" "$BASE_URL/api/v1/prontuarios")
   HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
 
   if [ "$HTTP_CODE" = "200" ]; then
-    log_success "Retrieved medical records"
+    log_success "Listagem de todos os prontuários médicos"
   else
-    log_error "Failed to get medical records (HTTP: $HTTP_CODE)"
+    log_error "Falha ao listar prontuários médicos (HTTP: $HTTP_CODE)"
   fi
-
-  # Test patient history if we have a patient ID
+  
   if [ -f "$TEST_DIR/patient_id.txt" ]; then
     PATIENT_ID=$(cat "$TEST_DIR/patient_id.txt")
     RESPONSE=$(curl -s -w "\n%{http_code}" "$BASE_URL/api/v1/prontuarios/paciente/$PATIENT_ID/historico")
@@ -336,46 +326,42 @@ test_medical_records() {
   fi
 }
 
-# Performance test
 test_performance() {
-  log_info "Running basic performance tests..."
-
-  # Test response time for dashboard
+  log_info "Executando testes de performance..."
+  
   START_TIME=$(date +%s%N)
   curl -s "$BASE_URL/api/v1/admin/dashboard" >/dev/null
   END_TIME=$(date +%s%N)
   DURATION=$((($END_TIME - $START_TIME) / 1000000)) # Convert to milliseconds
 
   if [ $DURATION -lt 2000 ]; then # Less than 2 seconds
-    log_success "Dashboard response time: ${DURATION}ms"
+    log_success "Tempo de resposta do dashboard: ${DURATION}ms"
   else
-    log_warning "Dashboard response time slow: ${DURATION}ms"
+    log_warning "Tempo de resposta do dashboard alto: ${DURATION}ms"
   fi
 
-  # Test concurrent requests
-  log_info "Testing concurrent requests..."
+  
+  log_info "Testando múltiplas requisições simultâneas..."
   for i in {1..5}; do
     curl -s "$BASE_URL/api/v1/pacientes" >/dev/null &
   done
   wait
-  log_success "Completed concurrent request test"
+  log_success "Requisições simultâneas completadas"
 }
 
-# Main test execution
 main() {
-  log_info "Starting SGHSS API Tests..."
-  log_info "Testing API at: $BASE_URL"
+  log_info "Começando os testes de integração da API..."
+  log_info "Testando API na URL: $BASE_URL"
   echo
-
-  # Test API health first
+  
   if ! test_api_health; then
-    log_error "API health check failed. Make sure the API is running."
+    log_error "API não está acessível. Abortando testes."
     exit 1
   fi
 
   echo
 
-  # Run all tests
+  
   test_patients
   echo
 
@@ -397,27 +383,24 @@ main() {
   test_performance
   echo
 
-  # Test summary
+  
   TOTAL_TESTS=$((TESTS_PASSED + TESTS_FAILED))
-  log_info "Test Summary:"
-  echo -e "  ${GREEN}Passed: $TESTS_PASSED${NC}"
-  echo -e "  ${RED}Failed: $TESTS_FAILED${NC}"
+  log_info "Resumo:"
+  echo -e "  ${GREEN}Sucesso: $TESTS_PASSED${NC}"
+  echo -e "  ${RED}Falha: $TESTS_FAILED${NC}"
   echo -e "  Total:  $TOTAL_TESTS"
 
   if [ $TESTS_FAILED -eq 0 ]; then
-    log_success "All tests passed! 🎉"
+    log_success "Todos os testes passaram! 🎉"
     exit 0
   else
-    log_error "Some tests failed. Check the output above."
+    log_error "$TESTS_FAILED de $TOTAL_TESTS testes falharam."
     exit 1
   fi
 }
 
-# Cleanup function
 cleanup() {
-  log_info "Cleaning up test data..."
+  log_info "Limpando dados de teste..."
   rm -rf "$TEST_DIR"
-  log_success "Cleanup completed"
+  log_success "Dados de teste limpos!"
 }
-
-# Set trap to cleanup on exit

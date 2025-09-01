@@ -44,7 +44,7 @@ let webApp =
     choose [
         GET >=> route "/" >=> text "Welcome to SGHSS API"
         // Public authentication routes
-        subRoute "/auth" AuthHandlers.routes
+        subRoute "/api/v1/auth" AuthHandlers.routes
         //route "/pacientes" >=> Domains.Paciente.Handler.routes
         // Rotas autenticadas
         subRoute "/api/v1" (
@@ -110,10 +110,13 @@ let configureCors (configuration:IConfiguration) =
         let allowedOrigins = configuration.GetSection("AllowedOrigins").Get<string[]>()
         // builder.WithOrigins(allowedOrigins)
         
-        builder.WithOrigins(allowedOrigins)
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                |> ignore
+        builder
+            .WithOrigins(allowedOrigins)
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials()
+            .Build()
+            |> ignore
 
 let configureApp (app : IApplicationBuilder) =
     let env = app.ApplicationServices.GetService<IWebHostEnvironment>()
@@ -121,7 +124,7 @@ let configureApp (app : IApplicationBuilder) =
     // app.UseSwagger() |> ignore
     // app.UseSwaggerUI(fun c -> c.SwaggerEndpoint("/swagger/v1/swagger.json", "SGHSS Api v1")) |> ignore
     app.UseOpenApi() |> ignore              // Serves /swagger/v1/swagger.json
-    app.UseSwaggerUi() |> ignore           // Serves Swagger UI at /swagger
+    app.UseSwaggerUi() |> ignore           // Serves Swagger UI at /swagger        
     // app.UseMiddleware(fun next ->
     //     let func:Func<HttpContext,Task<unit>> = RequestLoggingMiddleware.requestResponseLoggingMiddleware next
     //     func) |> ignore    
@@ -132,19 +135,31 @@ let configureApp (app : IApplicationBuilder) =
     | false ->
         app .UseGiraffeErrorHandler(errorHandler)
             .UseHttpsRedirection())
-        .UseCors((configureCors (app.ApplicationServices.GetService<IConfiguration>())))        
+                
         .UseStaticFiles()
         |> configureAuthMiddleware
+        |> (fun app -> app.UseCors((configureCors (app.ApplicationServices.GetService<IConfiguration>()))))
         |> (fun builder -> builder.UseGiraffe(webApp))
 
 let configureServices (services : IServiceCollection) =
-    services.AddCors()    |> ignore
+    services.AddCors(fun opt ->
+        opt.AddPolicy("Default",fun policy ->
+            let allowedOrigins = [|"http://localhost:4200";"http://localhost:58078";"http://localhost:5173"|]
+        // builder.WithOrigins(allowedOrigins)
+        
+            policy
+                .WithOrigins(allowedOrigins)
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials()
+                .Build()
+                |> ignore))    |> ignore
     services.AddGiraffe() |> ignore
     // .AddControllers().AddNewtonsoftJson(fun opts ->
     //     // Enable F# support
     //     opts.SerializerSettings.Converters.Add(FSharpConverter())
     //     opts.SerializerSettings.NullValueHandling <- NullValueHandling.Ignore) |> ignore
-    // services.AddLogging() |> ignore
+    services.AddLogging() |> ignore
     services.AddSerilog() |> ignore    
     // services.AddHttpLogging(fun opt ->
     //     opt.CombineLogs <- true
@@ -161,7 +176,7 @@ let main args =
     let webRoot     = Path.Combine(contentRoot, "WebRoot")
     // quero evitar isso ficar aparecendo no banco de logs no futuro,
     // mesmo que não seja um projeto sério. 
-    printfn "%s" (Authentication.hashPassword None "Admin123!")
+    printfn "%s" (Authentication.hashPassword None "Adm12345!")
     Logger.logger.Information("Iniciando aplicação...")
     Host.CreateDefaultBuilder(args)
         .ConfigureWebHostDefaults(

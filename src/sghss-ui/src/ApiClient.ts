@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:58078';
+const API_BASE_URL = 'https://localhost:58078/api/v1';
 
 export class ApiClient {
     baseURL: string;
@@ -35,45 +35,45 @@ export class ApiClient {
         };
         
         if (this.token) {
-        config.headers.Authorization = `Bearer ${this.token}`;
+            config.headers.Authorization = `Bearer ${this.token}`;
         }
 
         try {
-        let response = await fetch(url, config);
+            let response = await fetch(url, config);
 
-        if (response.status === 401 && this.refreshToken) {
-            const refreshed = await this.refreshAuthToken();
-            if (refreshed) {          
-            config.headers.Authorization = `Bearer ${this.token}`;
-            response = await fetch(url, config);
+            if (response.status === 401 && this.refreshToken) {
+                const refreshed = await this.refreshAuthToken();
+                if (refreshed) {          
+                config.headers.Authorization = `Bearer ${this.token}`;
+                response = await fetch(url, config);
+                }
             }
-        }
-        
-        if (response.status === 204) {
-            return null;
-        }
+            
+            if (response.status === 204) {
+                return null;
+            }
 
-        const data = await response.json();
+            const data = await response.json();
 
-        if (!response.ok) {
-            throw new Error(data.error || `HTTP ${response.status}`);
-        }
+            if (!response.ok) {
+                throw new Error(data.error || `HTTP ${response.status}`);
+            }
 
-        return data;
+            return data;
         } catch (error) {
-        console.error('API Request failed:', error);
-        throw error;
+            console.error('API Request failed:', error);
+            throw error;
         }
     }
     
     async login(email: string, password: string) {
-        const response = await this.request('/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
+        const response = await this.request('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password }),
         });
 
         if (response.token && response.refreshToken) {
-        this.setTokens(response.token, response.refreshToken);
+            this.setTokens(response.token, response.refreshToken);
         }
 
         return response;
@@ -81,7 +81,7 @@ export class ApiClient {
 
     async refreshAuthToken() {
         try {
-        const response = await this.request('/refresh', {
+        const response = await this.request('/auth/refresh', {
             method: 'POST',
             body: JSON.stringify({ refreshToken: this.refreshToken }),
         });
@@ -99,18 +99,18 @@ export class ApiClient {
 
     async logout() {
         try {
-        await this.request('/logout', { method: 'POST' });
+        await this.request('/auth/logout', { method: 'POST' });
         } finally {
         this.clearTokens();
         }
     }
 
     async getProfile() {
-        return await this.request('/profile');
+        return await this.request('/auth/profile');
     }
 
     async changePassword(currentPassword: string, newPassword: string) {
-        return await this.request('/change-password', {
+        return await this.request('/auth/change-password', {
         method: 'POST',
         body: JSON.stringify({ currentPassword, newPassword }),
         });
