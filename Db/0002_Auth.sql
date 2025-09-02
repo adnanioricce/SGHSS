@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
 
 -- Clean up expired tokens periodically
 CREATE OR REPLACE FUNCTION cleanup_expired_tokens()
-RETURNS void AS $
+RETURNS void AS $$
 BEGIN
 DELETE FROM refresh_tokens
 WHERE expires_at < CURRENT_TIMESTAMP OR is_revoked = true;
@@ -34,7 +34,7 @@ WHERE expires_at < CURRENT_TIMESTAMP OR is_revoked = true;
 DELETE FROM password_reset_tokens
 WHERE expires_at < CURRENT_TIMESTAMP OR used = true;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Insert default admin user (change password after first login!)
 INSERT INTO usuarios_sistema (username, password_hash, salt, email, nome_completo, ativo)

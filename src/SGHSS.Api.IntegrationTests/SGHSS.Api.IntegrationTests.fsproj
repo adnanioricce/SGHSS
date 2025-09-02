@@ -20,4 +20,8 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
     <PackageReference Update="FSharp.Core" Version="7.*" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SGHSS.Api\SGHSS.Api.fsproj" />
+  </ItemGroup>
 </Project>

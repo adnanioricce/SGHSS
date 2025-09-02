@@ -120,7 +120,7 @@ let configureCors (configuration:IConfiguration) =
 
 let configureApp (app : IApplicationBuilder) =
     let env = app.ApplicationServices.GetService<IWebHostEnvironment>()
-    app.UseSerilogRequestLogging() |> ignore
+    // app.UseSerilogRequestLogging() |> ignore
     // app.UseSwagger() |> ignore
     // app.UseSwaggerUI(fun c -> c.SwaggerEndpoint("/swagger/v1/swagger.json", "SGHSS Api v1")) |> ignore
     app.UseOpenApi() |> ignore              // Serves /swagger/v1/swagger.json
@@ -135,7 +135,7 @@ let configureApp (app : IApplicationBuilder) =
     | false ->
         app .UseGiraffeErrorHandler(errorHandler)
             .UseHttpsRedirection())
-                
+        
         .UseStaticFiles()
         |> configureAuthMiddleware
         |> (fun app -> app.UseCors((configureCors (app.ApplicationServices.GetService<IConfiguration>()))))
@@ -160,7 +160,7 @@ let configureServices (services : IServiceCollection) =
     //     opts.SerializerSettings.Converters.Add(FSharpConverter())
     //     opts.SerializerSettings.NullValueHandling <- NullValueHandling.Ignore) |> ignore
     services.AddLogging() |> ignore
-    services.AddSerilog() |> ignore    
+    // services.AddSerilog() |> ignore    
     // services.AddHttpLogging(fun opt ->
     //     opt.CombineLogs <- true
     //     opt.LoggingFields <- HttpLoggingFields.All) |> ignore
@@ -168,7 +168,7 @@ let configureServices (services : IServiceCollection) =
     configureSwagger services |> ignore
 
 let configureLogging (builder : ILoggingBuilder) =
-    builder.AddConsole().AddSerilog(Logger.logger) |> ignore
+    builder.SetMinimumLevel(LogLevel.Information).AddDebug().AddConsole() |> ignore
 
 [<EntryPoint>]
 let main args =

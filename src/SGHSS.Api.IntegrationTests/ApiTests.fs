@@ -1,15 +1,15 @@
 module ApiTests
 
-// =====================================================
-// SGHSS API Test Suite
-// =====================================================
-
+open System.Net
+open System.Net.Http.Headers
+open System.Net.Http.Json
 open Bogus
 open Bogus.Extensions.Brazil
 open Expecto
 open System
 open System.Net.Http
 open System.Text
+open Infrastructure.Security.Authentication
 open Newtonsoft.Json
 
 // Test configuration
@@ -50,7 +50,16 @@ let deleteAsync (endpoint: string) =
         let! content = response.Content.ReadAsStringAsync() |> Async.AwaitTask
         return (response.StatusCode, content)
     }
-
+let loginAsync (username: string) (password: string) = async {
+    let! response =
+        client.PostAsJsonAsync($"{baseUrl}/api/v1/auth/login",{|
+            Email = username
+            Password = password
+            RememberMe = false
+        |}) |> Async.AwaitTask
+    let! content = response.Content.ReadFromJsonAsync<LoginResponse>() |> Async.AwaitTask
+    return (response.StatusCode, content)
+}
 // Test data models
 type TestPaciente = {
     nome: string
@@ -142,15 +151,13 @@ let sampleProfissional = {
     unidadeId = 1
     permiteTelemedicina = true
 }
+let (statusLogin, loginResponse) = loginAsync "admin@sghss.com" "Adm12345!" |> Async.RunSynchronously
+client.DefaultRequestHeaders.Authorization <- new AuthenticationHeaderValue("Bearer",loginResponse.Token)
 
-// =====================================================
-// PATIENT TESTS
-// =====================================================
-// [<Tests>]
 let pacienteTests =
     let faker = Faker()
     testList "Paciente API Tests" [
-        testAsync "Should create a new patient" {
+        testAsync "Should create a new patient" {            
             let! (statusCode, content) = postAsync "/api/v1/pacientes" ({samplePaciente with cpf = faker.Person.Cpf(false) })
             Expect.equal statusCode System.Net.HttpStatusCode.Created "Should return 201 Created"
             
@@ -165,20 +172,20 @@ let pacienteTests =
             let patients = JsonConvert.DeserializeObject<obj[]>(content)
             Expect.isGreaterThanOrEqual patients.Length 0 "Should return patients array"
         }
-        //
+        
         testAsync "Should get patient by ID" {
-            // First create a patient
+            
             let! (createStatus, createContent) = postAsync "/api/v1/pacientes" ({samplePaciente with cpf = faker.Person.Cpf(false) })
             let createResponse = JsonConvert.DeserializeAnonymousType(createContent, {| id = 0; message = "" |})
             
-            // Then get it by ID
+            
             let! (statusCode, content) = getAsync $"/api/v1/pacientes/{createResponse.id}"
             Expect.equal statusCode System.Net.HttpStatusCode.OK "Should return 200 OK"
             
             let patient = JsonConvert.DeserializeAnonymousType(content, {| id = 0; nome = ""; cpf = "" |})
             Expect.equal patient.nome samplePaciente.nome "Should return correct patient name"
         }
-        //
+        
         testAsync "Should validate required fields" {
             let invalidPaciente = { samplePaciente with nome = ""; cpf = "" }
             let! (statusCode, content) = postAsync "/api/v1/pacientes" invalidPaciente
@@ -186,10 +193,6 @@ let pacienteTests =
         }
     ]
 
-// =====================================================
-// PROFESSIONAL TESTS
-// =====================================================
-// [<Tests>]
 let profissionalTests =
     let faker = Faker()
     testList "Profissional API Tests" [
@@ -218,15 +221,11 @@ let profissionalTests =
         }
     ]
 
-// =====================================================
-// APPOINTMENT TESTS
-// =====================================================
-// [<Tests>]
 let agendamentoTests =
     let faker = Faker()
     testList "Agendamento API Tests" [
         testAsync "Should prevent scheduling conflicts" {
-            // First create patient and professional
+            
             let! (_, pacienteContent) = postAsync "/api/v1/pacientes" ({samplePaciente with cpf = faker.Person.Cpf(false);})
             let pacienteResponse = JsonConvert.DeserializeAnonymousType(pacienteContent, {| id = 0 |})
             
@@ -244,11 +243,11 @@ let agendamentoTests =
                 planoSaudeCobertura = false
             }
             
-            // Create first appointment
+            
             let! (status1, _) = postAsync "/api/v1/agendamentos" agendamento1
             Expect.equal status1 System.Net.HttpStatusCode.Created "First appointment should be created"
             
-            // Try to create conflicting appointment
+            // Tentando criar um agendamento conflitante para testar regra.
             let agendamento2 = { agendamento1 with dataHora = futureDate.AddMinutes(15) }
             let! (status2, _) = postAsync "/api/v1/agendamentos" agendamento2
             Expect.equal status2 System.Net.HttpStatusCode.Conflict "Should prevent double booking"
@@ -262,10 +261,6 @@ let agendamentoTests =
         }
     ]
 
-// =====================================================
-// TELEMEDICINE TESTS
-// =====================================================
-// [<Tests>]
 let telemedicinTests =
     testList "Telemedicina API Tests" [
         testAsync "Should create telemedicine session" {
@@ -292,10 +287,6 @@ let telemedicinTests =
         }
     ]
 
-// =====================================================
-// ADMINISTRATION TESTS
-// =====================================================
-// [<Tests>]
 let administracaoTests =
     
     testList "Administração API Tests" [
@@ -321,10 +312,6 @@ let administracaoTests =
         }
     ]
 
-// =====================================================
-// MEDICAL RECORDS TESTS
-// =====================================================
-// [<Tests>]
 let prontuarioTests =
     testList "Prontuário API Tests" [
         testAsync "Should create medical record with prescriptions" {
@@ -362,9 +349,6 @@ let prontuarioTests =
         }
     ]
 
-// =====================================================
-// ALL TESTS COLLECTION
-// =====================================================
 [<Tests>]
 let allTests =
     testList "SGHSS API Integration Tests" [

@@ -464,10 +464,10 @@ CREATE TABLE usuarios_sistema (
                                   unidade_id INTEGER REFERENCES unidades(id),
                                   data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                                   data_atualizacao TIMESTAMP,
-                                  CONSTRAINT check_user_reference CHECK (
-                                      (profissional_id IS NOT NULL AND paciente_id IS NULL) OR
-                                      (profissional_id IS NULL AND paciente_id IS NOT NULL)
-                                      )
+                                --   CONSTRAINT check_user_reference CHECK (
+                                --       (profissional_id IS NOT NULL AND paciente_id IS NULL) OR
+                                --       (profissional_id IS NULL AND paciente_id IS NOT NULL)
+                                --       )
 );
 
 -- Perfis de Acesso

@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        REGISTRY = 'registry.poderiaserseudominio.uk/adnangonzaga'
+        REGISTRY = 'adnanioricce'
         IMAGE_NAME = 'sghss-api'
         IMAGE_TAG = "$GIT_COMMIT"
         //KUBE_CONFIG = credentials('kubeconfig-credentials-id')
@@ -18,19 +18,15 @@ pipeline {
 
         stage('Build Api Docker Image') {
             steps {
-                script {
-                    // Build a docker image using the Dockerfile in docker/Api.Dockerfile
+                script {                    
                     def dockerFile = 'docker/Api.Dockerfile'
-                    docker.build("${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}", "-f ${dockerFile} .")
-                    // Alternatively, if you want to use the default Dockerfile in the root directory
-                    // docker.build("${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}")
+                    docker.build("${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}", "-f ${dockerFile} .")                    
                 }
             }
         }
         stage('Build Database Docker Image') {
             steps {
-                script {
-                    // Build a docker image for the database
+                script {                    
                     def dbDockerFile = 'docker/Db.Dockerfile'
                     docker.build("${REGISTRY}/sghss-db:${IMAGE_TAG}", "-f ${dbDockerFile} .")
                 }
@@ -38,8 +34,7 @@ pipeline {
         }
         // stage('Run Tests') {
         //     steps {
-        //         script {
-        //             // Run tests inside the Docker container
+        //         script {        
         //             docker.image("${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}").inside {
         //                 sh 'dotnet test --no-build --verbosity normal'
         //             }
@@ -54,8 +49,7 @@ pipeline {
                     }
                 }
             }
-        }
-        //TODO: Uncomment and configure the following stages for deployment to Kubernetes
+        }        
         stage('Deploy database changes to k8s cluster') {
           steps {
             //withCredentials([file(credentialsId: 'kubeconfig-credentials-id', variable: 'KUBECONFIG')]) {
