@@ -1,0 +1,169 @@
+graph TB
+    %% Client Layer
+    subgraph "Client Applications"
+        WEB_CLIENT[Web Browser<br/>HTML/CSS/JavaScript]
+        MOBILE_CLIENT[Mobile App<br/>React Native/Flutter]
+        API_CLIENT[External API Client<br/>REST/HTTP]
+        DESKTOP_CLIENT[Desktop Application<br/>Electron/WPF]
+    end
+    
+    %% Load Balancer & Gateway
+    subgraph "Entry Point"
+        LB[Load Balancer<br/>nginx/HAProxy]
+        GATEWAY[API Gateway<br/>Rate Limiting & Routing]
+        SSL[SSL Termination<br/>TLS 1.3]
+    end
+    
+    %% Application Server Layer
+    subgraph "Application Servers"
+        subgraph "Primary App Server"
+            FSHARP_API1[F# Web API<br/>Giraffe + ASP.NET Core 8<br/>Port 5000]
+            KESTREL1[Kestrel Web Server]
+        end
+        
+        subgraph "Secondary App Server (Scaling)"
+            FSHARP_API2[F# Web API<br/>Giraffe + ASP.NET Core 8<br/>Port 5001]
+            KESTREL2[Kestrel Web Server]
+        end
+    end
+    
+    %% Package Dependencies
+    subgraph "F# Application Dependencies"
+        subgraph "Core Packages"
+            GIRAFFE[Giraffe 6.4.0<br/>HTTP Handler Framework]
+            ASPNET[ASP.NET Core 8.0<br/>Web Framework]
+            FSHARP_CORE[F# Core 8.0<br/>Language Runtime]
+        end
+        
+        subgraph "Database Packages"
+            NPGSQL[Npgsql 9.0.3<br/>PostgreSQL Driver]
+            NPGSQL_FSHARP[Npgsql.FSharp 5.7.0<br/>F# Database Wrapper]
+        end
+        
+        subgraph "Security Packages"
+            JWT_BEARER[Microsoft.AspNetCore<br/>.Authentication.JwtBearer 8.0]
+            BCRYPT[BCrypt.Net-Next 4.0.3<br/>Password Hashing]
+        end
+        
+        subgraph "Utility Packages"
+            NEWTONSOFT[Newtonsoft.Json.FSharp 3.2.2<br/>JSON Serialization]
+            SERILOG[Serilog 4.3.0<br/>Structured Logging]
+            NSWAG[NSwag.AspNetCore 14.5.0<br/>OpenAPI Documentation]
+        end
+    end
+    
+    %% Database Layer
+    subgraph "Database Infrastructure"
+        subgraph "Primary Database"
+            PG_PRIMARY[(PostgreSQL 15+<br/>Primary Database<br/>Read/Write)]
+            PG_BACKUP[(PostgreSQL Backup<br/>Automated Backups<br/>Point-in-time Recovery)]
+        end
+        
+        subgraph "Database Features"
+            PG_INDEXES[Optimized Indexes<br/>• CPF Index<br/>• DateTime Index<br/>• Foreign Key Indexes]
+            PG_TRIGGERS[Database Triggers<br/>• Audit Triggers<br/>• Update Timestamps<br/>• Data Validation]
+            PG_PROCEDURES[Stored Procedures<br/>• Report Generation<br/>• Data Maintenance<br/>• Cleanup Tasks]
+        end
+    end
+    
+    %% External Services
+    subgraph "External Services"
+        SMTP_SERVICE[SMTP Server<br/>Email Notifications]
+        FILE_STORAGE[File Storage<br/>Document Management<br/>Medical Images]
+        BACKUP_SERVICE[Backup Service<br/>Automated Backups<br/>Disaster Recovery]
+        MONITORING[Application Monitoring<br/>Health Checks<br/>Performance Metrics]
+    end
+    
+    %% Configuration & Environment
+    subgraph "Configuration Management"
+        CONFIG_DEV[Development Config<br/>appsettings.Development.json]
+        CONFIG_PROD[Production Config<br/>appsettings.Production.json]
+        ENV_VARS[Environment Variables<br/>Connection Strings<br/>API Keys]
+        SECRETS[Secret Management<br/>Database Credentials<br/>JWT Keys]
+    end
+    
+    %% Deployment Infrastructure
+    subgraph "Deployment & DevOps"
+        DOCKER[Docker Containers<br/>Application Containerization]
+        CI_CD[CI/CD Pipeline<br/>Automated Deployment]
+        HEALTH_CHECK[Health Check Endpoints<br/>/health<br/>/ready]
+        LOGS[Centralized Logging<br/>Serilog + Console<br/>Structured Logs]
+    end
+    
+    %% Security Infrastructure
+    subgraph "Security Layer"
+        FIREWALL[Network Firewall<br/>Port Restrictions]
+        WAF[Web Application Firewall<br/>Attack Prevention]
+        AUDIT_SYSTEM[Audit System<br/>LGPD Compliance<br/>Access Logging]
+        ENCRYPT[Data Encryption<br/>At Rest & In Transit]
+    end
+    
+    %% Connections
+    WEB_CLIENT --> LB
+    MOBILE_CLIENT --> LB
+    API_CLIENT --> LB
+    DESKTOP_CLIENT --> LB
+    
+    LB --> SSL
+    SSL --> GATEWAY
+    GATEWAY --> FSHARP_API1
+    GATEWAY --> FSHARP_API2
+    
+    FSHARP_API1 --> KESTREL1
+    FSHARP_API2 --> KESTREL2
+    
+    FSHARP_API1 --> GIRAFFE
+    FSHARP_API1 --> ASPNET
+    FSHARP_API1 --> NPGSQL
+    FSHARP_API1 --> JWT_BEARER
+    FSHARP_API1 --> BCRYPT
+    FSHARP_API1 --> SERILOG
+    
+    NPGSQL --> NPGSQL_FSHARP
+    NPGSQL_FSHARP --> PG_PRIMARY
+    
+    PG_PRIMARY --> PG_INDEXES
+    PG_PRIMARY --> PG_TRIGGERS
+    PG_PRIMARY --> PG_PROCEDURES
+    PG_PRIMARY --> PG_BACKUP
+    
+    FSHARP_API1 --> SMTP_SERVICE
+    FSHARP_API1 --> FILE_STORAGE
+    
+    CONFIG_DEV --> FSHARP_API1
+    CONFIG_PROD --> FSHARP_API1
+    ENV_VARS --> FSHARP_API1
+    SECRETS --> FSHARP_API1
+    
+    DOCKER --> FSHARP_API1
+    CI_CD --> DOCKER
+    HEALTH_CHECK --> MONITORING
+    LOGS --> MONITORING
+    
+    FIREWALL --> LB
+    WAF --> GATEWAY
+    AUDIT_SYSTEM --> PG_PRIMARY
+    ENCRYPT --> PG_PRIMARY
+    
+    BACKUP_SERVICE --> PG_BACKUP
+    BACKUP_SERVICE --> FILE_STORAGE
+
+    classDef client fill:#e1f5fe
+    classDef entry fill:#f3e5f5
+    classDef app fill:#e8f5e8
+    classDef dependency fill:#fff3e0
+    classDef database fill:#f1f8e9
+    classDef external fill:#fce4ec
+    classDef config fill:#f9f9f9
+    classDef deployment fill:#e0f2f1
+    classDef security fill:#ffebee
+    
+    class WEB_CLIENT,MOBILE_CLIENT,API_CLIENT,DESKTOP_CLIENT client
+    class LB,GATEWAY,SSL entry
+    class FSHARP_API1,FSHARP_API2,KESTREL1,KESTREL2 app
+    class GIRAFFE,ASPNET,FSHARP_CORE,NPGSQL,NPGSQL_FSHARP,JWT_BEARER,BCRYPT,NEWTONSOFT,SERILOG,NSWAG dependency
+    class PG_PRIMARY,PG_BACKUP,PG_INDEXES,PG_TRIGGERS,PG_PROCEDURES database
+    class SMTP_SERVICE,FILE_STORAGE,BACKUP_SERVICE,MONITORING external
+    class CONFIG_DEV,CONFIG_PROD,ENV_VARS,SECRETS config
+    class DOCKER,CI_CD,HEALTH_CHECK,LOGS deployment
+    class FIREWALL,WAF,AUDIT_SYSTEM,ENCRYPT security

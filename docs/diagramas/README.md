@@ -1,0 +1,1 @@
+Praticamente nada do que esta aqui reflete o que foi feito no projeto, mas ao menos deixar aqui, pois o que esta feito esta feito.

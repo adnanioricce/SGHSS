@@ -1,0 +1,169 @@
+graph TB
+    %% External Actors
+    subgraph "External Actors"
+        PT[Patients]
+        DR[Healthcare Professionals]
+        ADM[Administrators]
+        API_CLIENT[External API Clients]
+    end
+
+    %% Presentation Layer
+    subgraph "Presentation Layer"
+        WEB[Web Interface]
+        MOBILE[Mobile App]
+        API_GATEWAY[API Gateway]
+    end
+
+    %% Application Layer
+    subgraph "F# Web API (Giraffe + ASP.NET Core)"
+        subgraph "Controllers/Handlers"
+            PAC_CTRL[Patient Handler]
+            PROF_CTRL[Professional Handler]
+            AGEN_CTRL[Appointment Handler]
+            PRONT_CTRL[Medical Record Handler]
+            TELE_CTRL[Telemedicine Handler]
+            ADM_CTRL[Administration Handler]
+        end
+        
+        subgraph "Middleware"
+            AUTH_MW[Authentication Middleware]
+            LOG_MW[Request Logging Middleware]
+            AUDIT_MW[Audit Middleware]
+        end
+        
+        subgraph "Security"
+            JWT[JWT Authentication]
+            BCRYPT[BCrypt Password Hashing]
+            RBAC[Role-Based Access Control]
+        end
+    end
+
+    %% Domain Layer
+    subgraph "Domain Layer (F# Modules)"
+        subgraph "Core Domains"
+            PAC_DOM[Paciente Domain]
+            PROF_DOM[Profissional Domain]
+            AGEN_DOM[Agendamento Domain]
+            PRONT_DOM[Prontuario Domain]
+            TELE_DOM[Telemedicina Domain]
+            ADM_DOM[Administracao Domain]
+        end
+        
+        subgraph "Cross-Cutting"
+            UTILS[Utils Module]
+            LOGGER[Logger Module]
+            AUDIT_LOG[Audit Logger Module]
+        end
+    end
+
+    %% Infrastructure Layer
+    subgraph "Infrastructure Layer"
+        subgraph "Database Layer"
+            DB_CTX[Database Context]
+            REPO[Repository Pattern]
+            NPGSQL[Npgsql F# Driver]
+        end
+        
+        subgraph "External Services"
+            SMTP[Email Service]
+            FILE_STORAGE[File Storage]
+            BACKUP[Backup Service]
+        end
+    end
+
+    %% Data Layer
+    subgraph "PostgreSQL Database"
+        subgraph "Core Tables"
+            PAC_TBL[(pacientes)]
+            PROF_TBL[(profissionais)]
+            AGEN_TBL[(agendamentos)]
+            PRONT_TBL[(prontuarios)]
+            TELE_TBL[(sessoes_telemedicina)]
+        end
+        
+        subgraph "Administrative Tables"
+            UNID_TBL[(unidades)]
+            LEITOS_TBL[(leitos)]
+            SALAS_TBL[(salas)]
+            SUPR_TBL[(suprimentos)]
+            FIN_TBL[(itens_financeiros)]
+        end
+        
+        subgraph "System Tables"
+            USERS_TBL[(usuarios)]
+            AUDIT_TBL[(audit_logs)]
+            SESSIONS_TBL[(user_sessions)]
+        end
+    end
+
+    %% Connections
+    PT --> WEB
+    DR --> WEB
+    ADM --> WEB
+    API_CLIENT --> API_GATEWAY
+    
+    WEB --> API_GATEWAY
+    MOBILE --> API_GATEWAY
+    API_GATEWAY --> AUTH_MW
+    
+    AUTH_MW --> LOG_MW
+    LOG_MW --> AUDIT_MW
+    AUDIT_MW --> PAC_CTRL
+    AUDIT_MW --> PROF_CTRL
+    AUDIT_MW --> AGEN_CTRL
+    AUDIT_MW --> PRONT_CTRL
+    AUDIT_MW --> TELE_CTRL
+    AUDIT_MW --> ADM_CTRL
+    
+    PAC_CTRL --> PAC_DOM
+    PROF_CTRL --> PROF_DOM
+    AGEN_CTRL --> AGEN_DOM
+    PRONT_CTRL --> PRONT_DOM
+    TELE_CTRL --> TELE_DOM
+    ADM_CTRL --> ADM_DOM
+    
+    PAC_DOM --> DB_CTX
+    PROF_DOM --> DB_CTX
+    AGEN_DOM --> DB_CTX
+    PRONT_DOM --> DB_CTX
+    TELE_DOM --> DB_CTX
+    ADM_DOM --> DB_CTX
+    
+    LOGGER --> AUDIT_LOG
+    AUDIT_LOG --> AUDIT_TBL
+    
+    DB_CTX --> REPO
+    REPO --> NPGSQL
+    NPGSQL --> PAC_TBL
+    NPGSQL --> PROF_TBL
+    NPGSQL --> AGEN_TBL
+    NPGSQL --> PRONT_TBL
+    NPGSQL --> TELE_TBL
+    NPGSQL --> UNID_TBL
+    NPGSQL --> LEITOS_TBL
+    NPGSQL --> SALAS_TBL
+    NPGSQL --> SUPR_TBL
+    NPGSQL --> FIN_TBL
+    NPGSQL --> USERS_TBL
+    NPGSQL --> SESSIONS_TBL
+    
+    JWT --> USERS_TBL
+    BCRYPT --> USERS_TBL
+    
+    ADM_DOM --> SMTP
+    PRONT_DOM --> FILE_STORAGE
+    AUDIT_LOG --> BACKUP
+
+    classDef externalActor fill:#e1f5fe
+    classDef presentation fill:#f3e5f5
+    classDef application fill:#e8f5e8
+    classDef domain fill:#fff3e0
+    classDef infrastructure fill:#fce4ec
+    classDef database fill:#f1f8e9
+    
+    class PT,DR,ADM,API_CLIENT externalActor
+    class WEB,MOBILE,API_GATEWAY presentation
+    class PAC_CTRL,PROF_CTRL,AGEN_CTRL,PRONT_CTRL,TELE_CTRL,ADM_CTRL,AUTH_MW,LOG_MW,AUDIT_MW,JWT,BCRYPT,RBAC application
+    class PAC_DOM,PROF_DOM,AGEN_DOM,PRONT_DOM,TELE_DOM,ADM_DOM,UTILS,LOGGER,AUDIT_LOG domain
+    class DB_CTX,REPO,NPGSQL,SMTP,FILE_STORAGE,BACKUP infrastructure
+    class PAC_TBL,PROF_TBL,AGEN_TBL,PRONT_TBL,TELE_TBL,UNID_TBL,LEITOS_TBL,SALAS_TBL,SUPR_TBL,FIN_TBL,USERS_TBL,AUDIT_TBL,SESSIONS_TBL database

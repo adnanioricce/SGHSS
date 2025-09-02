@@ -1,0 +1,171 @@
+graph TB
+    %% Core Domain Services
+    subgraph "Core Healthcare Domains"
+        subgraph "Patient Management (Paciente)"
+            PAC_MODEL[Patient Models]
+            PAC_REPO[Patient Repository]
+            PAC_HANDLER[Patient Handler]
+            PAC_VALID[Patient Validation]
+            
+            PAC_MODEL --> PAC_REPO
+            PAC_REPO --> PAC_HANDLER
+            PAC_VALID --> PAC_HANDLER
+        end
+        
+        subgraph "Healthcare Professionals (Profissional)"
+            PROF_MODEL[Professional Models]
+            PROF_REPO[Professional Repository]
+            PROF_HANDLER[Professional Handler]
+            PROF_VALID[Professional Validation]
+            
+            PROF_MODEL --> PROF_REPO
+            PROF_REPO --> PROF_HANDLER
+            PROF_VALID --> PROF_HANDLER
+        end
+        
+        subgraph "Appointments (Agendamento)"
+            AGEN_MODEL[Appointment Models]
+            AGEN_REPO[Appointment Repository]
+            AGEN_HANDLER[Appointment Handler]
+            AGEN_VALID[Appointment Validation]
+            AGEN_CONFLICT[Conflict Detection]
+            
+            AGEN_MODEL --> AGEN_REPO
+            AGEN_REPO --> AGEN_HANDLER
+            AGEN_VALID --> AGEN_HANDLER
+            AGEN_CONFLICT --> AGEN_HANDLER
+        end
+        
+        subgraph "Medical Records (Prontuario)"
+            PRONT_MODEL[Medical Record Models]
+            PRONT_REPO[Medical Record Repository]
+            PRONT_HANDLER[Medical Record Handler]
+            PRONT_SIGN[Digital Signature]
+            PRONT_PRESC[Prescription Management]
+            
+            PRONT_MODEL --> PRONT_REPO
+            PRONT_REPO --> PRONT_HANDLER
+            PRONT_SIGN --> PRONT_HANDLER
+            PRONT_PRESC --> PRONT_HANDLER
+        end
+        
+        subgraph "Telemedicine (Telemedicina)"
+            TELE_MODEL[Telemedicine Models]
+            TELE_REPO[Telemedicine Repository]
+            TELE_HANDLER[Telemedicine Handler]
+            TELE_SESSION[Session Management]
+            TELE_RECORD[Session Recording]
+            
+            TELE_MODEL --> TELE_REPO
+            TELE_REPO --> TELE_HANDLER
+            TELE_SESSION --> TELE_HANDLER
+            TELE_RECORD --> TELE_HANDLER
+        end
+    end
+    
+    %% Administrative Domain Services
+    subgraph "Administrative Domains"
+        subgraph "Administration (Administracao)"
+            ADM_UNIT[Unit Management]
+            ADM_BED[Bed Management]
+            ADM_ROOM[Room Management]
+            ADM_ADMIT[Admission Management]
+            ADM_SUPPLY[Supply Management]
+            ADM_FINANCE[Financial Management]
+            ADM_REPORT[Report Generation]
+            
+            ADM_UNIT --> ADM_BED
+            ADM_UNIT --> ADM_ROOM
+            ADM_BED --> ADM_ADMIT
+            ADM_SUPPLY --> ADM_REPORT
+            ADM_FINANCE --> ADM_REPORT
+        end
+    end
+    
+    %% Cross-Cutting Concerns
+    subgraph "Cross-Cutting Services"
+        subgraph "Security"
+            AUTH[Authentication]
+            AUTHZ[Authorization]
+            JWT_SERVICE[JWT Service]
+            PWD_HASH[Password Hashing]
+            
+            AUTH --> JWT_SERVICE
+            AUTH --> PWD_HASH
+            AUTHZ --> AUTH
+        end
+        
+        subgraph "Logging & Audit"
+            REQ_LOG[Request Logging]
+            AUDIT_LOG[Audit Logging]
+            PERF_LOG[Performance Logging]
+            
+            REQ_LOG --> AUDIT_LOG
+            PERF_LOG --> AUDIT_LOG
+        end
+        
+        subgraph "Utilities"
+            UTILS[Common Utils]
+            VALID[Validation Utils]
+            DATE_UTILS[Date Utils]
+            
+            VALID --> UTILS
+            DATE_UTILS --> UTILS
+        end
+    end
+    
+    %% Domain Interactions
+    PAC_HANDLER -.-> AGEN_HANDLER
+    PROF_HANDLER -.-> AGEN_HANDLER
+    AGEN_HANDLER --> PRONT_HANDLER
+    PRONT_HANDLER -.-> TELE_HANDLER
+    
+    PAC_HANDLER -.-> ADM_ADMIT
+    PROF_HANDLER -.-> ADM_UNIT
+    ADM_BED -.-> ADM_ADMIT
+    
+    %% Cross-cutting integration
+    AUTH -.-> PAC_HANDLER
+    AUTH -.-> PROF_HANDLER
+    AUTH -.-> AGEN_HANDLER
+    AUTH -.-> PRONT_HANDLER
+    AUTH -.-> TELE_HANDLER
+    AUTH -.-> ADM_UNIT
+    
+    AUDIT_LOG -.-> PAC_HANDLER
+    AUDIT_LOG -.-> PROF_HANDLER
+    AUDIT_LOG -.-> AGEN_HANDLER
+    AUDIT_LOG -.-> PRONT_HANDLER
+    AUDIT_LOG -.-> TELE_HANDLER
+    AUDIT_LOG -.-> ADM_UNIT
+    
+    UTILS -.-> PAC_VALID
+    UTILS -.-> PROF_VALID
+    UTILS -.-> AGEN_VALID
+    
+    %% Data Types Flow
+    subgraph "Domain Models & Types"
+        PAC_TYPES[Patient Types<br/>• Paciente<br/>• Endereco<br/>• ContatoEmergencia]
+        PROF_TYPES[Professional Types<br/>• Profissional<br/>• TipoProfissional<br/>• Especialidade]
+        AGEN_TYPES[Appointment Types<br/>• Agendamento<br/>• TipoAgendamento<br/>• StatusAgendamento]
+        PRONT_TYPES[Medical Record Types<br/>• Prontuario<br/>• Prescricao<br/>• ExameSolicitado]
+        TELE_TYPES[Telemedicine Types<br/>• SessaoTelemedicina<br/>• StatusSessao<br/>• TipoSessao]
+        ADM_TYPES[Admin Types<br/>• Unidade<br/>• Leito<br/>• Internacao<br/>• Suprimento]
+    end
+    
+    PAC_TYPES --> PAC_MODEL
+    PROF_TYPES --> PROF_MODEL
+    AGEN_TYPES --> AGEN_MODEL
+    PRONT_TYPES --> PRONT_MODEL
+    TELE_TYPES --> TELE_MODEL
+    ADM_TYPES --> ADM_UNIT
+
+    classDef coreModel fill:#e8f5e8
+    classDef adminModel fill:#fff3e0
+    classDef crossCutting fill:#f3e5f5
+    classDef types fill:#e1f5fe
+    
+    class PAC_MODEL,PAC_REPO,PAC_HANDLER,PAC_VALID,PROF_MODEL,PROF_REPO,PROF_HANDLER,PROF_VALID,AGEN_MODEL,AGEN_REPO,AGEN_HANDLER,AGEN_VALID,AGEN_CONFLICT,PRONT_MODEL,PRONT_REPO,PRONT_HANDLER,PRONT_SIGN,PRONT_PRESC,TELE_MODEL,TELE_REPO,TELE_HANDLER,TELE_SESSION,TELE_RECORD coreModel
+    class ADM_UNIT,ADM_BED,ADM_ROOM,ADM_ADMIT,ADM_SUPPLY,ADM_FINANCE,ADM_REPORT adminModel
+    class AUTH,AUTHZ,JWT_SERVICE,PWD_HASH,REQ_LOG,AUDIT_LOG,PERF_LOG,UTILS,VALID,DATE_UTILS crossCutting
+    class PAC_TYPES,PROF_TYPES,AGEN_TYPES,PRONT_TYPES,TELE_TYPES,ADM_TYPES types
